@@ -1,0 +1,25 @@
+<template>
+    <div class="wrap">
+        <hi hi="{{hi}}"></hi>
+        <name name="{{name}}"></name>
+    </div>
+</template>
+
+<style>
+    .wrap {
+        flex-direction: row;
+    }
+</style>
+
+<script>
+import './hi.we';
+
+export default {
+    data() {
+        return {
+            hi: 'Hello',
+            name: 'Weex'
+        }
+    }
+}
+</script>
