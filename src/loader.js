@@ -141,7 +141,7 @@ function scriptLoaderString (loaders, config, customLoader) {
       name: defaultLoaders.resourceReferenceScript
     })
   }
-  if (config.app) {
+  if (config.app && process.env.abilityType === 'page') {
     loaders.push({
       name: defaultLoaders.manifest,
       query: {
@@ -194,10 +194,17 @@ function loader (source) {
   return output
 }
 
+function checkApp(_this) {
+  return ["app.js", "data.js", "service.js"].some(item => {
+    const type = item === "app.js" ? "page" : item === "data.js" ? "data" : item === "service.js" ? "service" : item;
+    return _this.resourcePath.indexOf(item) > 0 && process.env.abilityType === type
+  })
+}
+
 function loadApp (_this, name, isEntry, customLang) {
   let output = ''
   let extcss = false
-  if (_this.resourcePath.indexOf('app.js') > 0) {
+  if (checkApp(_this)) {
     const filename = _this.resourcePath.replace(path.extname(_this.resourcePath).toString(), '')
      // find css
     const cssFileName = filename + '.css'
