@@ -32,7 +32,6 @@ const { DEVICE_LEVEL } = require('./lite/lite-enum')
 module.exports = function (source, map) {
   this.cacheable && this.cacheable()
   const callback = this.async()
-
   parseScript(source, this.resourcePath)
     .then(({
       parsed, log
@@ -42,7 +41,7 @@ module.exports = function (source, map) {
       }
       parsed = parseRequireModule(parsed)
       if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
-        if (path.basename(this.resourcePath) !== 'app.js') {
+        if (!["app.js","data.js","service.js"].includes(path.basename(this.resourcePath))) {
           parsed += `\nvar moduleOwn = exports.default || module.exports;\nvar accessors = ['public', 'protected', 'private'];
 if (moduleOwn.data && accessors.some(function (acc) {
     return moduleOwn[acc];
