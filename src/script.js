@@ -41,7 +41,8 @@ module.exports = function (source, map) {
       }
       parsed = parseRequireModule(parsed)
       if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
-        if (!["app.js","data.js","service.js"].includes(path.basename(this.resourcePath))) {
+        const appName = process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`
+        if (path.basename(this.resourcePath) !== appName) {
           parsed += `\nvar moduleOwn = exports.default || module.exports;\nvar accessors = ['public', 'protected', 'private'];
 if (moduleOwn.data && accessors.some(function (acc) {
     return moduleOwn[acc];

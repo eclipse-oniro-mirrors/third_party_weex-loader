@@ -195,10 +195,7 @@ function loader (source) {
 }
 
 function checkApp(_this) {
-  return ["app.js", "data.js", "service.js"].some(item => {
-    const type = item === "app.js" ? "page" : item === "data.js" ? "data" : item === "service.js" ? "service" : item;
-    return _this.resourcePath.indexOf(item) > 0 && process.env.abilityType === type
-  })
+  return _this.resourcePath.indexOf(process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`) > 0
 }
 
 function loadApp (_this, name, isEntry, customLang) {
