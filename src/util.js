@@ -287,8 +287,9 @@ function requireModule(moduleName) {
   return source
 }
 
-export function jsonLoaders (type, customLoader) {
+export function jsonLoaders (type, customLoader, isVisual, queryType) {
   let loaders = []
+
   switch (type) {
     case "template":
       loaders = [{
@@ -318,5 +319,15 @@ export function jsonLoaders (type, customLoader) {
       name: path.resolve(__dirname, `../node_modules/${customLoader}`)
     })
   }
+
+  if (isVisual) {
+    loaders.push({
+      name: path.resolve(__dirname, 'extgen.js'),
+      query: {
+        type: queryType
+      }
+    })
+  }
+  
   return stringifyLoaders(loaders)
 }
