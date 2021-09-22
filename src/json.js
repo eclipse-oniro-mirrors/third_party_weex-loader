@@ -32,42 +32,43 @@ module.exports = function (source) {
   this.cacheable && this.cacheable()
 
   const extName = path.extname(this.resourcePath)
-  if (process.env.DEVICE_LEVEL === 'card' && (extName === '.json' || extName === '.js')) {
-    try {
-      return parseCard(this, source)
-    } catch (e) {
-      logWarn(this, [{
-       reason: 'ERROR: Failed to parse the file : ' + this.resourcePath + `\n${e}`
-      }])
-      return '{}'
+  if (process.env.DEVICE_LEVEL === 'card') {
+    source = source.replace(/\/\*((\n|\r|.)*?)\*\//mg, "")
+    source = source.replace(/(\s|\;|^|\{|\})\/\/.*$/mg, "$1")
+    if (extName === '.js' || extName === '.json') {
+      if(source.trim().indexOf('export default') === 0) {
+        source = source.replace('export default', '')
+      }
+      source = ResourceReferenceParsing(source)
+      source = source.replace(REG_EVENT_STRING, item => {
+        return item.slice(1,-1)
+      })
+      source = source.replace(REG_EVENT, item => {
+        return '"' + item + '"'
+      })
+      source = source.replace(REG_THIS, item => {
+        if (item.charAt(item.length-1) !== '\"' && item.charAt(item.length-1) !== '\'' && item.slice(-2) !== '\"\,' && item.slice(-2) !== '\'\,') {
+          if (item.charAt(item.length-1) === ',') {
+            item = `"{{${transCardArray(item.slice(0, -1))}}}",`.replace(/this\./g, '')
+          } else {
+            item = `"{{${transCardArray(item)}}}"`.replace(/this\./g,'')
+          }
+        }
+        return item
+      })
+      if (extName === '.js') {
+        try {
+          source = JSON.stringify(eval('(' + source + ')'))
+        } catch (e) {
+          logWarn(this, [{
+            reason: 'ERROR: Failed to parse the file : ' + this.resourcePath + `\n${e}`
+          }])
+          return `{}`
+        }
+      } else {
+        return source
+      }
     }
   }
   return `module.exports = ${source}`
-}
-
-function parseCard(_this, source) {
-  source = source.replace(/\/\*((\n|\r|.)*?)\*\//mg,"")
-  source = source.replace(/(\s|\;|^|\{|\})\/\/.*$/mg,"$1")
-  if (source.trim().indexOf('export default') === 0) {
-    source = source.replace('export default', '')
-  }
-  source = ResourceReferenceParsing(source)
-  source = source.replace(REG_EVENT_STRING, item => {
-    return item.slice(1, -1)
-  })
-  source = source.replace(REG_EVENT, item => {
-    return '"' + item + '"'
-  })
-  source = source.replace(REG_THIS, item => {
-    if (item.charAt(item.length - 1) !== '\"' && item.charAt(item.length - 1) !== '\'' &&
-      item.slice(-2) !== '\"\,' && item.slice(-2) !== '\'\,') {
-        if (item.charAt(item.length - 1) === ',') {
-          item = `"{{${transCardArray(item.slice(0, -1))}}}",`.replace(/this\./g, '')
-        } else {
-          item = `"{{${transCardArray(item)}}}"`.replace(/this\./g, '')
-        }
-      }
-    return item
-  })
-  return source
 }
