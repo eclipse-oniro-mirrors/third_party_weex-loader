@@ -181,7 +181,7 @@ function loader (source) {
   const isEntry = resourceQuery.entry
   const dirName = path.parse(this.resourcePath)
   const name = isEntry ? dirName.name : resourceQuery.name || getNameByPath(this.resourcePath)
-  if (isReservedTag(name)) {
+  if (isReservedTag(name) && process.env.abilityType === 'page') {
     logWarn(this, [{
       reason: 'ERROR: The file name cannot contain reserved tag name: ' + name
     }])
