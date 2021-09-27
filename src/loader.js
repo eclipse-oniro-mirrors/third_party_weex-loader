@@ -181,7 +181,7 @@ function loader (source) {
   const isEntry = resourceQuery.entry
   const dirName = path.parse(this.resourcePath)
   const name = isEntry ? dirName.name : resourceQuery.name || getNameByPath(this.resourcePath)
-  if (isReservedTag(name)) {
+  if (isReservedTag(name) && process.env.abilityType === 'page') {
     logWarn(this, [{
       reason: 'ERROR: The file name cannot contain reserved tag name: ' + name
     }])
@@ -195,10 +195,7 @@ function loader (source) {
 }
 
 function checkApp(_this) {
-  return ["app.js", "data.js", "service.js"].some(item => {
-    const type = item === "app.js" ? "page" : item === "data.js" ? "data" : item === "service.js" ? "service" : item;
-    return _this.resourcePath.indexOf(item) > 0 && process.env.abilityType === type
-  })
+  return _this.resourcePath.indexOf(process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`) > 0
 }
 
 function loadApp (_this, name, isEntry, customLang) {
