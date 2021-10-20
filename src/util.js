@@ -221,13 +221,13 @@ export function loadBabelModule (moduleName) {
   }
 }
 
-export function parseRequireModule (source) {
-  const requireMethod = process.env.DEVICE_LEVEL === DEVICE_LEVEL.LITE ?
+const methodForLite = 
 `
 function requireModule(moduleName) {
   return requireNative(moduleName.slice(1));
 }
-` :
+` 
+const methodForOthers =
 `
 function requireModule(moduleName) {
   const systemList = ['system.router', 'system.app', 'system.prompt', 'system.configuration',
@@ -238,6 +238,10 @@ function requireModule(moduleName) {
     return target;
   }
   var shortName = moduleName.replace(/@[^.]+\.([^.]+)/, '$1');
+  target = requireNapi(shortName);
+  if (target !== 'undefined' && /@ohos/.test(moduleName)) {
+    return target;
+  }
   if (typeof ohosplugin !== 'undefined' && /@ohos/.test(moduleName)) {
     target = ohosplugin;
     for (let key of shortName.split('.')) {
@@ -262,11 +266,11 @@ function requireModule(moduleName) {
       return target;
     }
   }
-  target = requireNapi(shortName);
   return target;
 }
 `
-
+export function parseRequireModule (source) {
+  const requireMethod = process.env.DEVICE_LEVEL === DEVICE_LEVEL.LITE ? methodForLite : methodForOthers
   source = `${source}\n${requireMethod}`
   const requireReg = /require\(['"]([^()]+)['"]\)/g
   const libReg = /^lib(.+)\.so$/
