@@ -12,6 +12,7 @@ var IMPORT_MATCHER = /(['"]([^()]+?)['"])|(['"]([^()]+?)['"]\s+(only|not)?\s?(sc
 var LENGTH_REGEXP = /^[-+]?\d*\.?\d+(\S*)$/
 const CARD_SELECTOR = /^[\.#][A-Za-z0-9_\-]+$/
 const card = process.env.DEVICE_LEVEL === 'card'
+var ALL_SELECTOR_MATCHER = /^\*$/
 
 /**
  * expand margin、padding、border、borderWidth、borderColor、borderStyle properties、animation
@@ -254,7 +255,7 @@ function parse(code, done, resourcePath) {
           } else {
             rule.selectors.forEach(function (selector) {
               const flag = card ? selector.match(CARD_SELECTOR) :
-                selector.match(SELECTOR_MATCHER) || selector.match(DESCENDANT_SELECTOR_MATCHER)
+                selector.match(SELECTOR_MATCHER) || selector.match(DESCENDANT_SELECTOR_MATCHER) || selector.match(ALL_SELECTOR_MATCHER)
               if (flag) {
                 var className = selector
 

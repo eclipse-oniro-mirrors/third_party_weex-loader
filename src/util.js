@@ -18,6 +18,7 @@
  */
 
 import path from 'path'
+import fs from 'fs'
 import loaderUtils from 'loader-utils'
 import hash from 'hash-sum'
 import {
@@ -221,12 +222,12 @@ export function loadBabelModule (moduleName) {
   }
 }
 
-const methodForLite = 
+const methodForLite =
 `
 function requireModule(moduleName) {
   return requireNative(moduleName.slice(1));
 }
-` 
+`
 const methodForOthers =
 `
 function requireModule(moduleName) {
@@ -239,7 +240,7 @@ function requireModule(moduleName) {
   }
   var shortName = moduleName.replace(/@[^.]+\.([^.]+)/, '$1');
   target = requireNapi(shortName);
-  if (target !== 'undefined' && /@ohos/.test(moduleName)) {
+  if (typeof target !== 'undefined' && /@ohos/.test(moduleName)) {
     return target;
   }
   if (typeof ohosplugin !== 'undefined' && /@ohos/.test(moduleName)) {
@@ -274,10 +275,11 @@ export function parseRequireModule (source) {
   source = `${source}\n${requireMethod}`
   const requireReg = /require\(['"]([^()]+)['"]\)/g
   const libReg = /^lib(.+)\.so$/
+  const REG_SYSTEM = /@(system|ohos)\.(\S+)/g;
   let requireStatements = source.match(requireReg)
   if (requireStatements && requireStatements.length) {
     for (let requireStatement of requireStatements) {
-      if (requireStatement.indexOf('@system') > 0 || requireStatement.indexOf('@ohos') > 0) {
+      if (requireStatement.match(REG_SYSTEM)) {
         source = source.replace(requireStatement, requireStatement.replace('require', 'requireModule'))
       }
     }
@@ -332,6 +334,55 @@ export function jsonLoaders (type, customLoader, isVisual, queryType) {
       }
     })
   }
-  
+
   return stringifyLoaders(loaders)
+}
+
+export function circularFile(inputPath, outputPath) {
+  if ((!inputPath) || (!outputPath)) {
+    return;
+  }
+  fs.readdir(inputPath,function(err, files){
+    if (!files) {
+      return;
+    }
+    files.forEach(file => {
+      const inputFile = path.resolve(inputPath, file);
+      const outputFile = path.resolve(outputPath, file);
+      const fileStat = fs.statSync(inputFile);
+      if (fileStat.isFile()) {
+        copyFile(inputFile, outputFile);
+      } else {
+        circularFile(inputFile, outputFile);
+      }
+    });
+  })
+}
+
+function copyFile(inputFile, outputFile) {
+  try {
+    const parent = path.join(outputFile, '..');
+    if (!(fs.existsSync(parent) && fs.statSync(parent).isDirectory())) {
+      mkDir(parent);
+    }
+    if (fs.existsSync(outputFile)) {
+      return;
+    }
+    const readStream = fs.createReadStream(inputFile);
+    const writeStream = fs.createWriteStream(outputFile);
+    readStream.pipe(writeStream);
+    readStream.on('close', function() {
+      writeStream.end();
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export function mkDir(path_) {
+  const parent = path.join(path_, '..');
+  if (!(fs.existsSync(parent) && !fs.statSync(parent).isFile())) {
+    mkDir(parent);
+  }
+  fs.mkdirSync(path_);
 }
