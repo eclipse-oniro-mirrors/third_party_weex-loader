@@ -194,6 +194,7 @@ var URL_REGEXP = /^url\(\s*['"]?\s*([^()]+?)\s*['"]?\s*\)$/
 var NAME_REGEXP = /^[a-zA-Z_]+[a-zA-Z0-9-]*$/
 var INT_REGEXP = /^[-+]?[0-9]+$/
 var ID_REGEXP = /^\"@id\d+\"$/
+var AUTO_REGEXP = /^auto$/
 var DATE_REGEXP = /(^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((1[02]|0?[13578])-([12][0-9]|3[01]|0?[1-9]))|((11|0?[469])-(30|[12][0-9]|0?[1-9]))|(0?2-(1[0-9]|2[0-8]|0?[1-9])))$)|(^(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[13579][26])00))-(0?)2-29$)/
 var TRANSFORM_REGEXP = /[0-9a-zA-Z]+\s*\(\s*[0-9(a-zA-Z-|%)\.]+\s*(,\s*[0-9(a-zA-Z-|%)\.]+)*\)/g
 var TRANSFORM_ITEM_REGEXP = /^([0-9a-zA-Z]+)\s*\((.*)\)$/
@@ -211,6 +212,29 @@ var logTypes = ["NOTE", "WARNING", "ERROR"]
 var ANYTHING_VALIDATOR = function ANYTHING_VALIDATOR(v) {
   v = (v || '').toString().trim()
   return { value: v }
+}
+
+/**
+ * the values below is valid
+ * - auto
+ * - number
+ * - number + 'px'|'%'|'vp'| 'fp'
+ *
+ * @param {string} v
+ * @return {function} a function to return
+ * - value: number|null
+ * - reason(k, v, result)
+ */
+var AUTO_PERCENTAGE_LENGTH_VALIDATOR = function AUTO_PERCENTAGE_LENGTH_VALIDATOR(v) {
+  v = (v || '').toString().trim()
+  if (v.match(AUTO_REGEXP)) {
+    return { value: v }
+  }
+  if (v.match(ID_REGEXP)) {
+    return { value: v }
+  } else {
+    return LENGTH(v, SUPPORT_CSS_PERCENTAGE_UNIT)
+  }
 }
 
 /**
@@ -348,6 +372,12 @@ var TIME_VALIDATOR = function TIME_VALIDATOR(v) {
 var SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR = function SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR(v) {
   v = (v || '').toString().trim()
   let rule = PERCENTAGE_LENGTH_VALIDATOR
+  return SHORTHAND_VALIDATOR(v, rule)
+}
+
+var SHORTHAND_AUTO_PERCENTAGE_LENGTH_VALIDATOR = function SHORTHAND_AUTO_PERCENTAGE_LENGTH_VALIDATOR(v) {
+  v = (v || '').toString().trim()
+  let rule = AUTO_PERCENTAGE_LENGTH_VALIDATOR
   return SHORTHAND_VALIDATOR(v, rule)
 }
 
@@ -2004,15 +2034,40 @@ var BORDER_IMAGE_URL_VALIDATOR = function BORDER_IMAGE_URL_VALIDATOR(v) {
   };
   let value = {
     url: "",
-    slice: [],
-    width: [],
-    outset: [],
     repeat: ""
   };
-  var URL_REGEXP = /^url\(\s*['"]?\s*([^()]+?)\s*['"]?\s*\)(.*)(stretch|round|repeat)$/;
-  let result = URL_REGEXP.exec(v);
+  var URL_REGEXP_FIRST = /^url\(\s*['"]?\s*([^()]+?)\s*['"]?\s*\)(.*)/;
+  var regexp_first = /(stretch|round|repeat|space)$/;
+  var URL_REGEXP_SECOND = /^(.*)(stretch|round|repeat|space)$/;
+  let result;
+  result = URL_REGEXP_FIRST.exec(v);
+  if (regexp_first.test(result[2])) {
+    let res = URL_REGEXP_SECOND.exec(result[2]);
+    value = BORDER_IMAGE_NOL(res[1]);
+    value.repeat = res[2];
+  } else {
+    var reg = /px|%/;
+    if (reg.test(result[2])) {
+      value = BORDER_IMAGE_NOL(result[2]);
+    }
+  }
   value.url = result[1];
-  let num = result[2].split(/\//);
+  base.values.push(value);
+  return {
+    value: JSON.stringify(base)
+  };
+}
+
+var BORDER_IMAGE_NOL = function BORDER_IMAGE_NOL(v) {
+  let value = {
+    url: "",
+    repeat: ""
+  };
+  var reg = /px|%/;
+  if (!reg.test(v)) {
+    return value;
+  }
+  let num = v.split(/\//);
   switch (num.length) {
     case 1:
     value.slice = BORDER_IMAGE_SPLIT(num[0]);
@@ -2027,15 +2082,11 @@ var BORDER_IMAGE_URL_VALIDATOR = function BORDER_IMAGE_URL_VALIDATOR(v) {
     value.outset = BORDER_IMAGE_SPLIT(num[2]);
     break;
   }
-  value.repeat = result[3];
-  base.values.push(value);
-  return {
-    value: JSON.stringify(base)
-  };
+  return value;
 }
 
 var BORDER_IMAGE_SPLIT = function BORDER_IMAGE_SPLIT(v) {
-  const NUM_REGEXP = SHORTHAND_LENGTH_VALIDATOR(v);
+  const NUM_REGEXP = SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR(v);
   let result = [];
   const value = NUM_REGEXP.value.split(/\s/);
   value.forEach(element => {
@@ -2046,7 +2097,7 @@ var BORDER_IMAGE_SPLIT = function BORDER_IMAGE_SPLIT(v) {
 
 var BORDER_IMAGE_GRADIENT_VALIDATOR = function BORDER_IMAGE_GRADIENT_VALIDATOR(v) {
   v = (v || "").toString().trim()
-  var BORDER_IMAGE_GRADIENT_ITEM_REGEXP = /^([0-9a-zA-Z-]+)\((.*)\)\s(.*)/;
+  var BORDER_IMAGE_GRADIENT_ITEM_REGEXP = /^([0-9a-zA-Z-]+)\((.*)\)(.*)/;
   let base = {
     values: []
   }
@@ -2058,7 +2109,10 @@ var BORDER_IMAGE_GRADIENT_VALIDATOR = function BORDER_IMAGE_GRADIENT_VALIDATOR(v
     if (util.isValidValue(gradient.value)) {
       value = JSON.parse(gradient.value)
     }
-    value.slice = BORDER_IMAGE_SPLIT(valueMatch[3]);
+    var reg = /px|%/;
+    if (valueMatch[3].match(reg)) {
+      value.slice = BORDER_IMAGE_SPLIT(valueMatch[3]);
+    }
     base.values.push(value);
     return {
       value: JSON.stringify(base),
@@ -2074,6 +2128,20 @@ var BORDER_IMAGE_GRADIENT_VALIDATOR = function BORDER_IMAGE_GRADIENT_VALIDATOR(v
   }
 }
 
+var Color_Picker_VALIDATOR = function Color_Picker_VALIDATOR(v) {
+  v = (v || "").toString().trim()
+  let num = v.split(/\//);
+  let base = {
+    cValues: []
+  }
+  num.forEach(element => {
+    base.cValues.push(COLOR_VALIDATOR(element).value);
+  });
+  return {
+    value: JSON.stringify(base)
+  }
+}
+
 var RICH_PROP_NAME_GROUPS = {
   boxModel: {
     width: PERCENTAGE_LENGTH_VALIDATOR,
@@ -2086,11 +2154,11 @@ var RICH_PROP_NAME_GROUPS = {
     paddingBottom: PERCENTAGE_LENGTH_VALIDATOR,
     paddingStart: PERCENTAGE_LENGTH_VALIDATOR,
     paddingEnd: PERCENTAGE_LENGTH_VALIDATOR,
-    margin: SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR,
-    marginLeft: PERCENTAGE_LENGTH_VALIDATOR,
-    marginRight: PERCENTAGE_LENGTH_VALIDATOR,
-    marginTop: PERCENTAGE_LENGTH_VALIDATOR,
-    marginBottom: PERCENTAGE_LENGTH_VALIDATOR,
+    margin: SHORTHAND_AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginLeft: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginRight: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginTop: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginBottom: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
     marginStart: PERCENTAGE_LENGTH_VALIDATOR,
     marginEnd: PERCENTAGE_LENGTH_VALIDATOR,
     placeholderColor: COLOR_VALIDATOR,
@@ -2166,10 +2234,10 @@ var RICH_PROP_NAME_GROUPS = {
     borderBottom: BORDER_VALIDATOR,
     borderImage: BORDER_IMAGE_VALIDATOR,
     borderImageSource: URL_VALIDATOR,
-    borderImageSlice: SHORTHAND_LENGTH_VALIDATOR,
-    borderImageWidth: SHORTHAND_LENGTH_VALIDATOR,
-    borderImageOutset: SHORTHAND_LENGTH_VALIDATOR,
-    borderImageRepeat: genEnumValidator(['stretch', 'round', 'repeat'])
+    borderImageOutset: SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR,
+    borderImageSlice: SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR,
+    borderImageWidth: SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR,
+    borderImageRepeat: genEnumValidator(['stretch', 'round', 'repeat', 'space'])
   },
   indicator: {
     indicatorSize: LENGTH_VALIDATOR,
@@ -2392,6 +2460,12 @@ var RICH_PROP_NAME_GROUPS = {
     focusFontFamily: ANYTHING_VALIDATOR,
     disappearFontSize: LENGTH_VALIDATOR,
     disappearColor: COLOR_VALIDATOR
+  },
+  colorpicker: {
+    colorPickerColor: Color_Picker_VALIDATOR
+  },
+  colorpickerView: {
+    colorPickerColor: Color_Picker_VALIDATOR
   },
   slider: {
     blockColor: COLOR_VALIDATOR,
@@ -2634,11 +2708,11 @@ var LITE_PROP_NAME_GROUPS = {
     paddingRight: LENGTH_VALIDATOR,
     paddingTop: LENGTH_VALIDATOR,
     paddingBottom: LENGTH_VALIDATOR,
-    margin:SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR,
-    marginLeft: PERCENTAGE_LENGTH_VALIDATOR,
-    marginRight: PERCENTAGE_LENGTH_VALIDATOR,
-    marginTop: PERCENTAGE_LENGTH_VALIDATOR,
-    marginBottom: PERCENTAGE_LENGTH_VALIDATOR,
+    margin:SHORTHAND_AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginLeft: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginRight: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginTop: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginBottom: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
     strokeWidth: LENGTH_VALIDATOR,
   },
   border:{
@@ -2708,11 +2782,11 @@ var CARD_PROP_NAME_GROUPS = {
     paddingBottom: PERCENTAGE_LENGTH_VALIDATOR,
     paddingStart: PERCENTAGE_LENGTH_VALIDATOR,
     paddingEnd: PERCENTAGE_LENGTH_VALIDATOR,
-    margin: SHORTHAND_PERCENTAGE_LENGTH_VALIDATOR,
-    marginLeft: PERCENTAGE_LENGTH_VALIDATOR,
-    marginRight: PERCENTAGE_LENGTH_VALIDATOR,
-    marginTop: PERCENTAGE_LENGTH_VALIDATOR,
-    marginBottom: PERCENTAGE_LENGTH_VALIDATOR,
+    margin: SHORTHAND_AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginLeft: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginRight: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginTop: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
+    marginBottom: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
     marginStart: PERCENTAGE_LENGTH_VALIDATOR,
     marginEnd: PERCENTAGE_LENGTH_VALIDATOR,
     columns: NUMBER_VALIDATOR,

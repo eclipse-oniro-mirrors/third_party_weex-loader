@@ -40,7 +40,7 @@ module.exports = function (source, map) {
         logWarn(this, log)
       }
       parsed = parseRequireModule(parsed)
-      if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
+      if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH || process.env.DEVICE_LEVEL === 'card') {
         const appName = process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`
         if (path.basename(this.resourcePath) !== appName) {
           parsed += `\nvar moduleOwn = exports.default || module.exports;\nvar accessors = ['public', 'protected', 'private'];

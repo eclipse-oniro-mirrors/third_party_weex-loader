@@ -141,7 +141,8 @@ function scriptLoaderString (loaders, config, customLoader) {
       name: defaultLoaders.resourceReferenceScript
     })
   }
-  if (config.app && process.env.abilityType === 'page') {
+  if (config.app && process.env.abilityType === 'page' &&
+    fs.existsSync(process.env.aceManifestPath)) {
     loaders.push({
       name: defaultLoaders.manifest,
       query: {
@@ -189,16 +190,17 @@ function loader (source) {
   }
   let output = ''
   //  import app.js
-  output += loadApp(this, name, isEntry, customLang)
+  output += loadApp(this, name, isEntry, customLang, source)
   output += loadPage(this, name, isEntry, customLang, source)
   return output
 }
 
 function checkApp(_this) {
-  return _this.resourcePath.indexOf(process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`) > 0
+  return _this.resourcePath === path.resolve(process.env.projectPath,
+    process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`)
 }
 
-function loadApp (_this, name, isEntry, customLang) {
+function loadApp (_this, name, isEntry, customLang, source) {
   let output = ''
   let extcss = false
   if (checkApp(_this)) {
@@ -227,7 +229,7 @@ function loadApp (_this, name, isEntry, customLang) {
       app: true
     }), _this.resourcePath)
 
-    if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
+    if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH || process.env.DEVICE_LEVEL === 'card') {
       output += `
       $app_define$('@app-application/${name}', [], function($app_require$, $app_exports$, $app_module$) {
       ` + `
@@ -252,8 +254,11 @@ function loadApp (_this, name, isEntry, customLang) {
       `module.exports=new ViewModel(options);`
     }
     return output
+  } else if (/\.js$/.test(_this.resourcePath)) {
+    return source
+  } else {
+    return output
   }
-  return output
 }
 
 function loadPage (_this, name, isEntry, customLang, source) {
