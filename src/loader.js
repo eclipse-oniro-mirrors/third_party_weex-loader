@@ -319,6 +319,7 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
         if (!element.name) {
           element.name = path.parse(src).name
         }
+        checkEntry(_this, filePath, element.src)
       }
       else {
         logWarn(_this, [{
@@ -458,4 +459,20 @@ function loadPageCheckLite (extscript, extcss) {
 for (const key in legacy) {
   loader[key] = legacy[key]
 }
+
+function checkEntry(_this, filePath, elementSrc) {
+  if (_this._compilation.entries) {
+    for (var key of _this._compilation.entries.keys()) {
+      const entryPath = path.join(path.resolve(process.env.projectPath), key + '.hml');
+      if (entryPath === filePath) {
+        logWarn(_this, [{
+          reason: `WARNING: The page "${elementSrc}" configured in 'config.json'` +
+            ` can not be uesd as a custom component.` +
+            `To ensure that the debugging function is normal, please delete this page in 'config.json'.`
+        }]);
+      }
+    }
+  }
+}
+
 module.exports = loader
