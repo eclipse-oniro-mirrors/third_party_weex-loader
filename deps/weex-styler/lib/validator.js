@@ -1421,52 +1421,58 @@ var ARRAY_COLOR_STOP_VALIDATOR = function ARRAY_COLOR_STOP_VALIDATOR(v) {
     let resultValues = []
     let reasonMaps = []
     let length = 0
-    values.forEach(function (value, n) {
-      let widthMatch = value.match(/[\s]+[-+0-9]+(px|%|vp|fp)?$/)
-      let tempValues = []
-      if (widthMatch) {
-        let matchResult = PERCENTAGE_LENGTH_VALIDATOR(widthMatch[0])
-        let index = value.indexOf(widthMatch[0])
-        value = value.substring(0, index)
-        if (util.isValidValue(matchResult.value)) {
-          tempValues.push(matchResult.value)
-        }
-        let check = checkReason(matchResult, n.toString(), widthMatch[0], length)
-        length = check.length
-        if (check.realReason !== null) {
-          reasonMaps.push(check.realReason)
-        }
-      }
-      if (value) {
-        let colorResult = COLOR_VALIDATOR(value)
-        if (util.isValidValue(colorResult.value)) {
-          tempValues.unshift(colorResult.value)
-        }
-        resultValues.push(tempValues.join(' '))
-        let check = checkReason(colorResult, n.toString(), value, length)
-        length = check.length
-        if (check.realReason !== null) {
-          reasonMaps.push(check.realReason)
-        }
-      } else {
-        length = 2
-        reasonMaps.push("parameter '" + v + "' is incorrect format.")
-      }
-    })
+    processValueItem(v, values, resultValues, reasonMaps)
     return {
       value: length < 2 ? JSON.stringify(resultValues) : null,
       reason: reasonMaps.length > 0 ?
         function (k, v) {
-          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect. \n  ' + reasonMaps.join('\n  ')
+          return logTypes[length] + ': Value `' + v + '` of the `' +
+            util.camelCaseToHyphened(k) + '` attribute is incorrect. \n  ' + reasonMaps.join('\n  ')
         } : null
     }
   }
   return {
     value: null,
     reason: function (k, v) {
-      return 'ERROR: The format of value `' + v + '` of the `'+ util.camelCaseToHyphened(k) + '` attribute is incorrect. Please specify at least two colors.'
+      return 'ERROR: The format of value `' + v + '` of the `'+ util.camelCaseToHyphened(k) +
+        '` attribute is incorrect. Please specify at least two colors.'
     }
   }
+}
+
+function processValueItem(v, values, resultValues, reasonMaps, length) {
+  values.forEach(function (value, n) {
+    let widthMatch = value.match(/[\s]+[-+0-9]+(px|%|vp|fp)?$/)
+    let tempValues = []
+    if (widthMatch) {
+      let matchResult = PERCENTAGE_LENGTH_VALIDATOR(widthMatch[0])
+      let index = value.indexOf(widthMatch[0])
+      value = value.substring(0, index)
+      if (util.isValidValue(matchResult.value)) {
+        tempValues.push(matchResult.value)
+      }
+      let check = checkReason(matchResult, n.toString(), widthMatch[0], length)
+      length = check.length
+      if (check.realReason !== null) {
+        reasonMaps.push(check.realReason)
+      }
+    }
+    if (value) {
+      let colorResult = COLOR_VALIDATOR(value)
+      if (util.isValidValue(colorResult.value)) {
+        tempValues.unshift(colorResult.value)
+      }
+      resultValues.push(tempValues.join(' '))
+      let check = checkReason(colorResult, n.toString(), value, length)
+      length = check.length
+      if (check.realReason !== null) {
+        reasonMaps.push(check.realReason)
+      }
+    } else {
+      length = 2
+      reasonMaps.push("parameter '" + v + "' is incorrect format.")
+    }
+  })
 }
 
 function checkReason(result, k, v, length) {
@@ -1510,7 +1516,8 @@ var ANGLE_VALIDATOR = function ANGLE_VALIDATOR(v) {
             value: angle + SUPPORT_CSS_ANGLE_UNIT[0],
             reason: function(k, v) {
               return 'ERROR: The `' + util.camelCaseToHyphened(k) +
-              '` attribute does not support `' + unit + '`. It only supports `' + JSON.stringify(SUPPORT_CSS_ANGLE_UNIT) + '`.'
+                '` attribute does not support `' + unit + '`. It only supports `' +
+                JSON.stringify(SUPPORT_CSS_ANGLE_UNIT) + '`.'
             }
           }
         }
@@ -1519,7 +1526,9 @@ var ANGLE_VALIDATOR = function ANGLE_VALIDATOR(v) {
       return {
         value: parseFloat(v) + SUPPORT_CSS_ANGLE_UNIT[0],
         reason: function(k, v) {
-          return 'WARNING: No unit is specified for the value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute. The default unit is `' + SUPPORT_CSS_ANGLE_UNIT[0] + '`.'
+          return 'WARNING: No unit is specified for the value `' + v +
+            '` of the `' + util.camelCaseToHyphened(k) + '` attribute. The default unit is `' +
+            SUPPORT_CSS_ANGLE_UNIT[0] + '`.'
         }
       }
     }
@@ -1527,7 +1536,8 @@ var ANGLE_VALIDATOR = function ANGLE_VALIDATOR(v) {
   return {
     value: null,
     reason: function(k, v) {
-      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v + '` (only numbers are supported).'
+      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `'
+        + v + '` (only numbers are supported).'
     }
   }
 }
@@ -1563,7 +1573,8 @@ var GRADIENT_DIRECTION_VALIDATOR = function GRADIENT_DIRECTION_VALIDATOR(v) {
     value: invalid ? null : v,
     reason: invalid ?
       function (k, v) {
-        return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+        return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+          '` attribute is incorrect.'
       } : null
   }
 }
@@ -1615,7 +1626,8 @@ var URL_VALIDATOR = function URL_VALIDATOR(v) {
     return {
       value: null,
       reason: function (k, v) {
-          return 'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute must be none or url(...).'
+          return 'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+            '` attribute must be none or url(...).'
       }
     }
   }
@@ -1629,7 +1641,8 @@ var NAME_VALIDATOR = function NAME_VALIDATOR(v) {
     return {
       value: null,
       reason: function(k, v) {
-        return 'ERROR: The format of value `' + v + '` of the `' +  util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+        return 'ERROR: The format of value `' + v + '` of the `' +  util.camelCaseToHyphened(k) +
+          '` attribute is incorrect.'
       }
     }
   }
@@ -1647,7 +1660,8 @@ var ITERATIONCOUNT_VALIDATOR = function ITERATIONCOUNT_VALIDATOR(v) {
     return {
       value: null,
       reason: function(k, v) {
-          return 'ERROR: The format of value `' + v + '` of the `' +  util.camelCaseToHyphened(k) + '` attribute is incorrect (only integers and infinity are supported).'
+          return 'ERROR: The format of value `' + v + '` of the `' +  util.camelCaseToHyphened(k) +
+            '` attribute is incorrect (only integers and infinity are supported).'
       }
     }
   }
@@ -1798,8 +1812,10 @@ var MYLOCATION_VALIDATOR = function MYLOCATION_VALIDATOR(v) {
         value : null,
         reason: function(k, v) {
           return reason == 'value' ?
-            'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute does not meet the inspection standards for the color or url.' :
-            'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute must be set in order(color color url).'
+            'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+            '` attribute does not meet the inspection standards for the color or url.' :
+            'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+            '` attribute must be set in order(color color url).'
         }
       }
     }
@@ -1836,7 +1852,8 @@ var TRANSFORM_ORIGIN_VALIDATOR = function TRANSFORM_ORIGIN_VALIDATOR(v) {
   return {
     value: null,
     reason: function (k, v) {
-      return 'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is invalid. such as left 100px or 50% bottom.'
+      return 'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+        '` attribute is invalid. such as left 100px or 50% bottom.'
     }
   }
 }
@@ -1864,7 +1881,8 @@ var CHECK_TRANSFORM_ORIGIN = function CHECK_TRANSFORM_ORIGIN(values) {
       }
     }
   })
-  if (directions.length != 2 || directions.length === 2 && (directions[0] === 'vertical' || directions[1] === 'horizon')) {
+  if (directions.length != 2 || directions.length === 2 &&
+    (directions[0] === 'vertical' || directions[1] === 'horizon')) {
     reasons.push(function (k, v) {
       return 'ERROR: Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
     })
@@ -1964,7 +1982,8 @@ var DATE_VALIDATOR = function DATE_VALIDATOR(v) {
     return {
       value: null,
       reason:function (k, v, result) {
-        return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+        return 'ERROR: The format of value `' + v + '` of the `' +
+          util.camelCaseToHyphened(k) + '` attribute is incorrect.'
       }
     }
   }
@@ -1978,7 +1997,8 @@ var FILTER_VALIDATOR = function FILTER_VALIDATOR(v) {
     return {
       value: null,
       reason:function (k, v, result) {
-        return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+        return 'ERROR: The format of value `' + v + '` of the `' +
+          util.camelCaseToHyphened(k) + '` attribute is incorrect.'
       }
     }
   }
@@ -1992,7 +2012,8 @@ var FILTER_PERCENTAGE_VALIDATOR = function FILTER_PERCENTAGE_VALIDATOR(v) {
   if (FILTER_STYLE_REGEXP.test(v)) {
     const values = v.trim().split(/\s+/)
     if(values[1] && values.length === 2){
-      const blurStyleValidator = genEnumValidator(['small_light', 'medium_light', 'large_light', 'xlarge_light', 'small_dark', 'medium_dark', 'large_dark', 'xlarge_dark'])
+      const blurStyleValidator = genEnumValidator(['small_light', 'medium_light', 'large_light',
+        'xlarge_light', 'small_dark', 'medium_dark', 'large_dark', 'xlarge_dark'])
       const blurStyleResult = blurStyleValidator(values[1])
       if(util.isValidValue(blurStyleResult.value)){
         return { value: v }
@@ -2014,7 +2035,8 @@ var FILTER_PERCENTAGE_VALIDATOR = function FILTER_PERCENTAGE_VALIDATOR(v) {
   return {
     value: null,
     reason:function (k, v, result) {
-      return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+      return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+        '` attribute is incorrect.'
     }
   }
 }
@@ -2266,7 +2288,8 @@ var RICH_PROP_NAME_GROUPS = {
     flexShrink: NUMBER_VALIDATOR,
     flexBasis: LENGTH_VALIDATOR,
     flexDirection: genEnumValidator(['row', 'column', 'column-reverse', 'row-reverse']),
-    justifyContent: genEnumValidator(['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly']),
+    justifyContent: genEnumValidator(['flex-start', 'flex-end', 'center', 'space-between',
+      'space-around', 'space-evenly']),
     alignItems: genEnumValidator(['stretch', 'flex-start', 'flex-end', 'center', 'baseline']),
     alignContent: genEnumValidator(['stretch', 'flex-start', 'flex-end', 'center', 'space-between', 'space-around']),
     alignSelf: genEnumValidator(["auto", "flex-start", "flex-end", "center", "baseline", "stretch"])
@@ -2301,7 +2324,8 @@ var RICH_PROP_NAME_GROUPS = {
     fontSize: LENGTH_VALIDATOR,
     fontStyle: genEnumValidator(['normal', 'italic']),
     fontFamily: ANYTHING_VALIDATOR,
-    fontWeight: genEnumValidator(['normal', 'lighter', 'bold', 'bolder', "medium", "regular", '100', '200', '300', '400', '500', '600', '700', '800', '900']),
+    fontWeight: genEnumValidator(['normal', 'lighter', 'bold', 'bolder', "medium", "regular",
+      '100', '200', '300', '400', '500', '600', '700', '800', '900']),
     textDecoration: genEnumValidator(['none', 'underline', 'line-through']),
     textAlign: genEnumValidator(['start', 'end', 'left', 'center', 'right']),
     textOverflow: genEnumValidator(['clip', 'ellipsis']),
@@ -2731,7 +2755,8 @@ var LITE_PROP_NAME_GROUPS = {
   flexbox: {
     flexDirection: genEnumValidator(['row', 'column']),
     flexWrap: genEnumValidator(['nowrap', 'wrap']),
-    justifyContent: genEnumValidator(['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly']),
+    justifyContent: genEnumValidator(['flex-start', 'flex-end', 'center', 'space-between',
+      'space-around', 'space-evenly']),
     alignItems: genEnumValidator(['stretch', 'flex-start', 'flex-end', 'center']),
   },
   position: {
@@ -2852,7 +2877,8 @@ var CARD_PROP_NAME_GROUPS = {
     flexShrink: NUMBER_VALIDATOR,
     flexBasis: LENGTH_VALIDATOR,
     flexDirection: genEnumValidator(['row', 'column', 'column-reverse', 'row-reverse']),
-    justifyContent: genEnumValidator(['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly']),
+    justifyContent: genEnumValidator(['flex-start', 'flex-end', 'center', 'space-between',
+      'space-around', 'space-evenly']),
     alignItems: genEnumValidator(['stretch', 'flex-start', 'flex-end', 'center', 'baseline']),
     alignContent: genEnumValidator(['stretch', 'flex-start', 'flex-end', 'center', 'space-between', 'space-around']),
   },
@@ -2887,7 +2913,8 @@ var CARD_PROP_NAME_GROUPS = {
     letterSpacing: LENGTH_VALIDATOR,
     fontStyle: genEnumValidator(['normal', 'italic']),
     fontFamily: ANYTHING_VALIDATOR,
-    fontWeight: genEnumValidator(['normal', 'lighter', 'bold', 'bolder', "medium", "regular", '100', '200', '300', '400', '500', '600', '700', '800', '900']),
+    fontWeight: genEnumValidator(['normal', 'lighter', 'bold', 'bolder', "medium", "regular",
+      '100', '200', '300', '400', '500', '600', '700', '800', '900']),
     textDecoration: genEnumValidator(['none', 'underline', 'line-through']),
     textAlign: genEnumValidator(['start', 'end', 'left', 'center', 'right']),
     textOverflow: genEnumValidator(['clip', 'ellipsis']),
@@ -3032,7 +3059,8 @@ function validate(name, value) {
     result = {value: value}
     var suggestedName = SUGGESTED_PROP_NAME_GROUP[name]
     var suggested = suggestedName ? ', suggest `' + util.camelCaseToHyphened(suggestedName) + '`' : ''
-    log = {reason: 'WARNING: `' + util.camelCaseToHyphened(name) + '` is not a standard attribute name and may not be supported' + suggested}
+    log = {reason: 'WARNING: `' + util.camelCaseToHyphened(name) +
+      '` is not a standard attribute name and may not be supported' + suggested}
   }
   return {
     value: result.value,

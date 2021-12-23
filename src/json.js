@@ -20,7 +20,7 @@
 const path = require('path')
 
 const transCardArray = require('./templater/bind').transCardArray
-const ResourceReferenceParsing = require('./resource-reference-script')
+const resourceReferenceParsing = require('./resource-reference-script')
 
 import { logWarn } from './util'
 
@@ -39,7 +39,7 @@ module.exports = function (source) {
       if(source.trim().indexOf('export default') === 0) {
         source = source.replace('export default', '')
       }
-      source = ResourceReferenceParsing(source)
+      source = resourceReferenceParsing(source)
       source = source.replace(REG_EVENT_STRING, item => {
         return item.slice(1,-1)
       })
@@ -47,7 +47,10 @@ module.exports = function (source) {
         return '"' + item + '"'
       })
       source = source.replace(REG_THIS, item => {
-        if (item.charAt(item.length-1) !== '\"' && item.charAt(item.length-1) !== '\'' && item.slice(-2) !== '\"\,' && item.slice(-2) !== '\'\,') {
+        if (item.charAt(item.length-1) !== '\"' &&
+          item.charAt(item.length-1) !== '\'' &&
+          item.slice(-2) !== '\"\,' &&
+          item.slice(-2) !== '\'\,') {
           if (item.charAt(item.length-1) === ',') {
             item = `"{{${transCardArray(item.slice(0, -1))}}}",`.replace(/this\./g, '')
           } else {
