@@ -43,10 +43,12 @@ module.exports = function (source, map) {
       if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH || process.env.DEVICE_LEVEL === 'card') {
         const appName = process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`
         if (path.basename(this.resourcePath) !== appName) {
-          parsed += `\nvar moduleOwn = exports.default || module.exports;\nvar accessors = ['public', 'protected', 'private'];
+          parsed += `\nvar moduleOwn = exports.default || module.exports;\n` +
+            `var accessors = ['public', 'protected', 'private'];
 if (moduleOwn.data && accessors.some(function (acc) {
     return moduleOwn[acc];
-  })) {\n  throw new Error('For VM objects, attribute data must not coexist with public, protected, or private. Please replace data with public.');
+  })) {\n  throw new Error('For VM objects, attribute data must not coexist with public,` +
+  ` protected, or private. Please replace data with public.');
 } else if (!moduleOwn.data) {
   moduleOwn.data = {};\n  moduleOwn._descriptor = {};\n  accessors.forEach(function(acc) {
     var accType = typeof moduleOwn[acc];
@@ -56,7 +58,8 @@ if (moduleOwn.data && accessors.some(function (acc) {
         moduleOwn._descriptor[name] = {access : acc};
       }
     } else if (accType === 'function') {
-      console.warn('For VM objects, attribute ' + acc + ' value must not be a function. Change the value to an object.');
+      console.warn('For VM objects, attribute ' + acc +` +
+      ` ' value must not be a function. Change the value to an object.');
     }\n  });\n}`
         }
         let result = `module.exports = function(module, exports, $app_require$){${parsed}}`

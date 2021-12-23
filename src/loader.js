@@ -69,8 +69,6 @@ function getLoaderString (type, config) {
       return configLoaderString(loaders, config)
     case 'data':
       return dataLoaderString(loaders, config)
-    default:
-      return
   }
 }
 

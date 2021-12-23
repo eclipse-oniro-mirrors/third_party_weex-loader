@@ -40,20 +40,25 @@ function expand (subResult, camelCasedName, ruleResult) {
     })
   }
   else if (camelCasedName === 'margin' || camelCasedName === 'padding') {
-    const spliceName = [camelCasedName + 'Top', camelCasedName + 'Right', camelCasedName + 'Bottom', camelCasedName + 'Left']
+    const spliceName = [camelCasedName + 'Top', camelCasedName + 'Right',
+      camelCasedName + 'Bottom', camelCasedName + 'Left']
     util.splitAttr(ruleResult, subResult.value, spliceName)
   }
   else if (camelCasedName === 'borderWidth') {
-    util.splitAttr(ruleResult, subResult.value, ['borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'])
+    util.splitAttr(ruleResult, subResult.value, ['borderTopWidth', 'borderRightWidth',
+      'borderBottomWidth', 'borderLeftWidth'])
   }
   else if (camelCasedName === 'borderColor') {
-    util.splitAttr(ruleResult, subResult.value, ['borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'])
+    util.splitAttr(ruleResult, subResult.value, ['borderTopColor', 'borderRightColor',
+      'borderBottomColor', 'borderLeftColor'])
   }
   else if (camelCasedName === 'borderStyle') {
-    util.splitAttr(ruleResult, subResult.value, ['borderTopStyle', 'borderRightStyle', 'borderBottomStyle', 'borderLeftStyle'])
+    util.splitAttr(ruleResult, subResult.value, ['borderTopStyle', 'borderRightStyle',
+      'borderBottomStyle', 'borderLeftStyle'])
   }
   else if (camelCasedName === 'borderRadius') {
-    util.splitAttr(ruleResult, subResult.value, ['borderBottomLeftRadius', 'borderBottomRightRadius', 'borderTopLeftRadius', 'borderTopRightRadius'])
+    util.splitAttr(ruleResult, subResult.value, ['borderBottomLeftRadius', 'borderBottomRightRadius',
+      'borderTopLeftRadius', 'borderTopRightRadius'])
   }
   else if (camelCasedName === 'gridGap') {
     util.splitAttr(ruleResult, subResult.value, ['gridRowsGap', 'gridColumnsGap'])
@@ -96,7 +101,8 @@ function flexExpand(rule, ruleLog) {
         ruleLog.push({
           line: declaration.position.start.line,
           column: declaration.position.start.column,
-          reason: 'ERROR: Value `' + declaration.value + '` of the `' + declaration.property + '` attribute is incorrect.'
+          reason: 'ERROR: Value `' + declaration.value + '` of the `' +
+            declaration.property + '` attribute is incorrect.'
         })
       }
     }
@@ -122,51 +128,62 @@ function getUnit(value) {
 function checkFlexOne(rule, ruleLog, declaration, values, i) {
   const array = ['none', 'auto', 'initial']
   if (array.includes(values[0])) {
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex', value: values[0], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex',
+      value: values[0], position: declaration.position})
   } else if (getUnit(values[0]) === 'px') {
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-basis', value: values[0], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-basis',
+      value: values[0], position: declaration.position})
   } else if (getUnit(values[0]) === 'none') {
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-grow', value: values[0], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-grow',
+      value: values[0], position: declaration.position})
   } else {
     ruleLog.push({
       line: declaration.position.start.line,
       column: declaration.position.start.column,
-      reason: 'ERROR: Value `' + declaration.value + '` of the `' + declaration.property + '` attribute is incorrect.' +
-        'It must be a number, a number with unit `' + 'px`' + ', none, auto, or initial.'
+      reason: 'ERROR: Value `' + declaration.value + '` of the `' + declaration.property +
+        '` attribute is incorrect.' + 'It must be a number, a number with unit `' + 'px`' +
+        ', none, auto, or initial.'
     })
   }
 }
 
 function checkFlexTwo(rule, ruleLog, declaration, values, i) {
   if (getUnit(values[0]) === 'none') {
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-grow', value: values[0], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-grow',
+      value: values[0], position: declaration.position})
     if (getUnit(values[1]) === 'px') {
-      rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-basis', value: values[1], position: declaration.position})
+      rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-basis',
+        value: values[1], position: declaration.position})
     } else if (getUnit(values[1]) === 'none') {
-      rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-shrink', value: values[1], position: declaration.position})
+      rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-shrink',
+        value: values[1], position: declaration.position})
     } else {
       ruleLog.push({
         line: declaration.position.start.line,
         column: declaration.position.start.column,
-        reason: 'ERROR: Value `' + declaration.value + '` of the `' + declaration.property + '` attribute is incorrect. Value `' +
-          values[1] + '` must be a number or a number with unit `' + 'px`.'
+        reason: 'ERROR: Value `' + declaration.value + '` of the `' + declaration.property +
+          '` attribute is incorrect. Value `' + values[1] +
+          '` must be a number or a number with unit `' + 'px`.'
       })
     }
   } else {
     ruleLog.push({
       line: declaration.position.start.line,
       column: declaration.position.start.column,
-      reason: 'ERROR: Value `' + declaration.value + '` of the `' + declaration.property + '` attribute is incorrect. Value `' +
-        values[0] + '` must be a number.'
+      reason: 'ERROR: Value `' + declaration.value + '` of the `' +
+      declaration.property + '` attribute is incorrect. Value `' + values[0] + '` must be a number.'
     })
   }
 }
 
 function checkFlexThree(rule, ruleLog, declaration, values, i) {
   if (getUnit(values[0]) === 'none' && getUnit(values[1]) === 'none' && getUnit(values[2]) === 'px') {
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-grow', value: values[0], position: declaration.position})
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-shrink', value: values[1], position: declaration.position})
-    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-basis', value: values[2], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-grow',
+      value: values[0], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-shrink',
+      value: values[1], position: declaration.position})
+    rule.declarations.splice(i, 0, {type: 'declaration', property: 'flex-basis',
+      value: values[2], position: declaration.position})
   } else {
     ruleLog.push({
       line: declaration.position.start.line,
@@ -255,7 +272,8 @@ function parse(code, done, resourcePath) {
           } else {
             rule.selectors.forEach(function (selector) {
               const flag = card ? selector.match(CARD_SELECTOR) :
-                selector.match(SELECTOR_MATCHER) || selector.match(DESCENDANT_SELECTOR_MATCHER) || selector.match(ALL_SELECTOR_MATCHER)
+                selector.match(SELECTOR_MATCHER) || selector.match(DESCENDANT_SELECTOR_MATCHER) ||
+                  selector.match(ALL_SELECTOR_MATCHER)
               if (flag) {
                 var className = selector
 
@@ -308,7 +326,7 @@ function parse(code, done, resourcePath) {
             }
             var name = util.hyphenedToCamelCase(declaration.property)
             var value = declaration.value
-            if (name === 'fontFamily' && '\"\''.indexOf(value[0]) > -1) { // FIXME: delete leading and trailing quotes
+            if (name === 'fontFamily' && '\"\''.indexOf(value[0]) > -1) {
               value = value.slice(1, value.length - 1)
             }
             ruleResult[name] = value
