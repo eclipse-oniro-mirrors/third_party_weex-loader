@@ -1421,7 +1421,7 @@ var ARRAY_COLOR_STOP_VALIDATOR = function ARRAY_COLOR_STOP_VALIDATOR(v) {
     let resultValues = []
     let reasonMaps = []
     let length = 0
-    processValueItem(v, values, resultValues, reasonMaps)
+    processValueItem(v, values, resultValues, reasonMaps, length)
     return {
       value: length < 2 ? JSON.stringify(resultValues) : null,
       reason: reasonMaps.length > 0 ?
