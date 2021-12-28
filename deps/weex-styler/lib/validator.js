@@ -287,7 +287,8 @@ var LENGTH = function LENGTH(v, SUPPORT_UNIT) {
         {
           value: parseFloat(v) + SUPPORT_UNIT[0],
           reason: function(k, v) {
-            return 'WARNING: No unit is specified for the `'+util.camelCaseToHyphened(k)+'` attribute. The default unit is ' + SUPPORT_UNIT[0]
+            return 'WARNING: No unit is specified for the `' + util.camelCaseToHyphened(k) +
+              '` attribute. The default unit is ' + SUPPORT_UNIT[0]
           }
         }
     } else if (SUPPORT_UNIT.indexOf(unit) > -1) {
@@ -296,7 +297,8 @@ var LENGTH = function LENGTH(v, SUPPORT_UNIT) {
       return {
         value: parseFloat(v) + SUPPORT_UNIT[0],
         reason: function reason(k, v, result) {
-          return 'ERROR: The `' + k + '` attribute does not support `' + unit + '`. The default unit is ' + SUPPORT_UNIT[0]
+          return 'ERROR: The `' + k + '` attribute does not support `' + unit +
+            '`. The default unit is ' + SUPPORT_UNIT[0]
         }
       }
     }
@@ -336,7 +338,8 @@ var LENGTH = function LENGTH(v, SUPPORT_UNIT) {
   return {
     value: null,
     reason: function reason(k, v, result) {
-      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support the `' + v + '` value (only numbers are supported).'
+      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support the `' +
+        v + '` value (only numbers are supported).'
     }
   }
 }
@@ -573,7 +576,8 @@ var STYLE_VALIDATOR = function STYLE_VALIDATOR(v) {
     return {
       value: null,
       reason: function (k,v) {
-        return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v + '` (the support value is `' + styleList.join('`|`') + '`).'
+        return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' +
+          v + '` (the support value is `' + styleList.join('`|`') + '`).'
       }
     }
   }
@@ -690,7 +694,8 @@ var BORDER_VALIDATOR = function BORDER_VALIDATOR (value, name) {
         value: res,
         reason: reasons.length > 0 ? function (k, v) {
           return (
-            logTypes[index] + ': There are some problems with value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute. \n ' + reasons.join(' \n'))
+            logTypes[index] + ': There are some problems with value `' + v + '` of the `' +
+              util.camelCaseToHyphened(k) + '` attribute. \n ' + reasons.join(' \n'))
         } : null
       }
     }
@@ -700,7 +705,8 @@ var BORDER_VALIDATOR = function BORDER_VALIDATOR (value, name) {
     value: null,
     reason: function reason (k, v, result) {
       return 'ERROR: The `' + util.camelCaseToHyphened(k) +
-      '` attribute does not support value `' + v + '` (this value does not meet the inspection standards for the width, style, and color).'
+        '` attribute does not support value `' + v +
+        '` (this value does not meet the inspection standards for the width, style, and color).'
     }
   }
 }
@@ -810,7 +816,8 @@ var BOX_SHADOW_VALIDATOR = function BOX_SHADOW_VALIDATOR(value, name) {
         value: res,
         reason: reasons.length > 0 ? function (k, v) {
           return (
-            logTypes[index] + ': There are some problems with value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute. \n ' + reasons.join(' \n'))
+            logTypes[index] + ': There are some problems with value `' + v +
+              '` of the `' + util.camelCaseToHyphened(k) + '` attribute. \n ' + reasons.join(' \n'))
         } : null
       }
     }
@@ -819,7 +826,8 @@ var BOX_SHADOW_VALIDATOR = function BOX_SHADOW_VALIDATOR(value, name) {
     value: null,
     reason: function reason (k, v, result) {
       return 'ERROR: The `' + util.camelCaseToHyphened(k) +
-      '` attribute does not support value `' + v + '` (this value does not meet the inspection standards).'
+        '` attribute does not support value `' + v +
+        '` (this value does not meet the inspection standards).'
     }
   }
 }
@@ -879,7 +887,8 @@ var NUMBER_VALIDATOR = function NUMBER_VALIDATOR(v, isInt) {
   return {
     value: null,
     reason: function reason(k, v, result) {
-      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v + '` (only numbers are supported).'
+      return 'ERROR: The `' + util.camelCaseToHyphened(k) +
+        '` attribute does not support value `' + v + '` (only numbers are supported).'
     }
   }
 }
@@ -960,7 +969,8 @@ var TRANSITION_INTERVAL_VALIDATOR = function TRANSITION_INTERVAL_VALIDATOR(v) {
   return {
     value: null,
     reason: function reason(k, v, result) {
-      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v + '` (only seconds and milliseconds are supported).'
+      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' +
+        v + '` (only seconds and milliseconds are supported).'
     }
   }
 }
@@ -985,7 +995,8 @@ var TRANSITION_TIMING_FUNCTION_VALIDATOR = function TRANSITION_TIMING_FUNCTION_V
   let NUM_REGEXP = /^[-]?\d*\.?\d+$/
   if (match = v.match(/^cubic-bezier\(\s*(.*)\s*,\s*(.*)\s*,\s*(.*)\s*,\s*(.*)\s*\)$/)) {
     /* istanbul ignore else */
-    if (match[1].match(NUM_REGEXP) && match[2].match(NUM_REGEXP) && match[3].match(NUM_REGEXP) && match[4].match(NUM_REGEXP)) {
+    if (match[1].match(NUM_REGEXP) && match[2].match(NUM_REGEXP) &&
+      match[3].match(NUM_REGEXP) && match[4].match(NUM_REGEXP)) {
       ret = [parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3]), parseFloat(match[4])].join(',')
       return {value: 'cubic-bezier(' + ret + ')'}
     }
@@ -1008,7 +1019,8 @@ var TRANSITION_TIMING_FUNCTION_VALIDATOR = function TRANSITION_TIMING_FUNCTION_V
     value: null,
     reason: function reason(k, v, result) {
       return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v +
-             '` (supported values include `linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`, `cubic-bezier(n,n,n,n)` and `steps(n[, start|end])`).'
+             '` (supported values include `linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`,' +
+             ' `cubic-bezier(n,n,n,n)` and `steps(n[, start|end])`).'
     }
   }
 }
@@ -1158,7 +1170,8 @@ var TRANSFORM_VALIDATOR = function TRANSFORM_VALIDATOR(v) {
     value: result ? JSON.stringify(result) : null,
     reason: reasonMaps.length > 0 ?
       function(k, v) {
-        return logTypes[allLength] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
+        return logTypes[allLength] + ': Value `' + v + '` of the `' +
+          util.camelCaseToHyphened(k) + '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
       } : null
   }
 }
@@ -1211,7 +1224,8 @@ var ROTATE3D_VALIDATOR = function ROTATE3D_VALIDATOR(v) {
       value: length < 2 ? resultValues.join(' ') : null,
       reason: reasonMaps.length > 0 ?
         function (k, v) {
-          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
+          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+            '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
         } : null
     }
   }
@@ -1244,7 +1258,8 @@ var MULTIPLE_POSITION_VALIDATOR = function MULTIPLE_POSITION_VALIDATOR(v, valida
       value: length < 2 ? resultValues.join(' ') : null,
       reason: reasonMaps.length > 0 ?
         function (k, v) {
-          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
+          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+            '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
         } : null
     }
   }
@@ -1276,7 +1291,8 @@ function genEnumValidator(list) {
         value: v,
         reason: name !== 'objectFit' ?
           function reason(k, v, result) {
-            return 'NOTE: Value `' + v + '` is the default value of the `' + util.camelCaseToHyphened(k) + '` attribute (the value can be removed).'
+            return 'NOTE: Value `' + v + '` is the default value of the `' + util.camelCaseToHyphened(k) +
+              '` attribute (the value can be removed).'
           } : null
       }
     }
@@ -1284,7 +1300,8 @@ function genEnumValidator(list) {
       return {
         value: null,
         reason: function reason(k, v, result) {
-          return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v + '` (the supported value is `' + list.join('`|`') + '`).'
+          return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v +
+            '` (the supported value is `' + list.join('`|`') + '`).'
         }
       }
     }
@@ -1335,7 +1352,8 @@ var BACKGROUND_VALIDATOR = function BACKGROUND_VALIDATOR(v) {
         value: length < 2 ? JSON.stringify(resultValues) : null,
         reason: reasonMaps.length > 0 ?
           function (k, v) {
-            return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
+            return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+              '` attribute is incorrect. \n ' + reasonMaps.join(' \n ')
           } : null
       }
     }
@@ -1343,7 +1361,8 @@ var BACKGROUND_VALIDATOR = function BACKGROUND_VALIDATOR(v) {
   return {
     value: null,
     reason: function (k, v) {
-      return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+      return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+        '` attribute is incorrect.'
     }
   }
 }
@@ -1402,14 +1421,16 @@ var LINEAR_GRADIENT_VALIDATOR = function LINEAR_GRADIENT_VALIDATOR(v) {
       value: length < 2 ? JSON.stringify(result) : null,
       reason: reasonMaps.length > 0 ?
         function (k, v) {
-          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect. \n  ' + reasonMaps.join('\n  ')
+          return logTypes[length] + ': Value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+            '` attribute is incorrect. \n  ' + reasonMaps.join('\n  ')
         }: null
     }
   }
   return {
     value: null,
     reason: function (k, v) {
-      return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) + '` attribute is incorrect.'
+      return 'ERROR: The format of value `' + v + '` of the `' + util.camelCaseToHyphened(k) +
+        '` attribute is incorrect.'
     }
   }
 }
@@ -2059,11 +2080,11 @@ var BORDER_IMAGE_URL_VALIDATOR = function BORDER_IMAGE_URL_VALIDATOR(v) {
     repeat: ""
   };
   var URL_REGEXP_FIRST = /^url\(\s*['"]?\s*([^()]+?)\s*['"]?\s*\)(.*)/;
-  var regexp_first = /(stretch|round|repeat|space)$/;
+  var regexpFirst = /(stretch|round|repeat|space)$/;
   var URL_REGEXP_SECOND = /^(.*)(stretch|round|repeat|space)$/;
   let result;
   result = URL_REGEXP_FIRST.exec(v);
-  if (regexp_first.test(result[2])) {
+  if (regexpFirst.test(result[2])) {
     let res = URL_REGEXP_SECOND.exec(result[2]);
     value = BORDER_IMAGE_NOL(res[1]);
     value.repeat = res[2];
