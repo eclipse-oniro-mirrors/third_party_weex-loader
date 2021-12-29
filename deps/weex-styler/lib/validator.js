@@ -930,7 +930,8 @@ var TRANSITION_PROPERTY_VALIDATOR = function TRANSITION_PROPERTY_VALIDATOR(v) {
   return {
     value: null,
     reason: function reason(k, v, result) {
-      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' + v + '` (only CSS attributes support this value).'
+      return 'ERROR: The `' + util.camelCaseToHyphened(k) + '` attribute does not support value `' +
+        v + '` (only CSS attributes support this value).'
     }
   }
 }
