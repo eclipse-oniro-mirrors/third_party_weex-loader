@@ -23,7 +23,7 @@
         "destPath": "third_party/weex-loader"
     },
     "component": {
-        "name": "thirdparty_weex-loader",
+        "name": "thirdparty_weex_loader",
         "subsystem": "",
         "syscap": [],
         "features": [],
