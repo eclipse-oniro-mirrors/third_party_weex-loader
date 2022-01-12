@@ -17,13 +17,13 @@
         "third-party",
         "weex-loader"
     ],
-    "envs": [],
-    "dirs": [],
+    "envs": {},
+    "dirs": {},
     "segment": {
         "destPath": "third_party/weex-loader"
     },
     "component": {
-        "name": "thirdparty_weex_loader",
+        "name": "thirdparty_weex-loader",
         "subsystem": "",
         "syscap": [],
         "features": [],
