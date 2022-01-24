@@ -201,7 +201,7 @@ var TRANSFORM_ITEM_REGEXP = /^([0-9a-zA-Z]+)\s*\((.*)\)$/
 var FILTER_REGEXP = /^blur\(([1-9]\d*|0)(px|fp|vp)\)$/
 var FILTER_PERCENTAGE_REGEXP = /^blur\(([1-9]?\d|100)%\)$/
 var FILTER_STYLE_REGEXP = /^blur\(([1-9]?\d|100)%\)\s+[A-Za-z_]+$/
-var SUPPORT_CSS_EXPRESSION = /((?<=(calc)).*\s+\+\s+)|((?<=(calc)).*\s+\-\s+)|(((?<=(calc)).*\([1-9][0-9]*\s*\*\s*)|((?<=(calc)).*\s*\*\s*[1-9][0-9]*\)$))|((?<=(calc)).*\s*\/\s*[1-9][0-9]*\)$)|(var\(\-\-)/
+var SUPPORT_CSS_EXPRESSION = /((?<=(calc)).*(\s+\+\s+|\s+\-\s+|[1-9][0-9]*\s*\*\s*|\s*\*\s*[1-9][0-9]*|\s*\/\s*[1-9][0-9]*))|(var\(\-\-)/
 var SUPPORT_VAR_EXPRESSION = /var\(\-\-/
 var SUPPORT_CSS_UNIT = ['px', 'pt', 'wx', 'vp', 'fp']
 var SUPPORT_CSS_TIME_UNIT = ['ms', 's']
@@ -231,8 +231,9 @@ var AUTO_PERCENTAGE_LENGTH_VALIDATOR = function AUTO_PERCENTAGE_LENGTH_VALIDATOR
   v = (v || '').toString().trim()
   if (v.match(AUTO_REGEXP)) {
     return { value: v }
-  }
-  if (v.match(ID_REGEXP)) {
+  } else if (v.match(ID_REGEXP)) {
+    return { value: v }
+  } else if (v.match(SUPPORT_CSS_EXPRESSION)) {
     return { value: v }
   } else {
     return LENGTH(v, SUPPORT_CSS_PERCENTAGE_UNIT)
@@ -3175,7 +3176,7 @@ function evalRpn(rpnQueue) {
     }
   }
   if(outputStack.length != 1) {
-    //throw "unvalid expression"
+    throw "unvalid expression"
   } else {
     if (outputStack[0].match(/[+-]/)) {
         return 'calc' + outputStack[0]
@@ -3197,7 +3198,6 @@ function saveCssProp(name, value) {
 }
 
 function cssVarFun(value) {
-  var varValue
   if (value.match(/calc/)) {
     return value
       } else {
@@ -3209,7 +3209,7 @@ function cssVarFun(value) {
               var cssVarFir = value.replace("var(","").replace(")","").trim()
               var cssVarSec = ""
               }
-        varValue = cssVarSec
+        let varValue = cssVarSec
         for(var i=0, len=cssPropData.length; i<len; i++) {
           var cPDName = cssPropData[i].name.trim()
           cssVarFir = util.hyphenedToCamelCase(cssVarFir)
