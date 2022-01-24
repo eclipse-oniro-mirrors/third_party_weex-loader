@@ -201,6 +201,8 @@ var TRANSFORM_ITEM_REGEXP = /^([0-9a-zA-Z]+)\s*\((.*)\)$/
 var FILTER_REGEXP = /^blur\(([1-9]\d*|0)(px|fp|vp)\)$/
 var FILTER_PERCENTAGE_REGEXP = /^blur\(([1-9]?\d|100)%\)$/
 var FILTER_STYLE_REGEXP = /^blur\(([1-9]?\d|100)%\)\s+[A-Za-z_]+$/
+var SUPPORT_CSS_EXPRESSION = /((?<=(calc)).*\s+\+\s+)|((?<=(calc)).*\s+\-\s+)|(((?<=(calc)).*\([1-9][0-9]*\s*\*\s*)|((?<=(calc)).*\s*\*\s*[1-9][0-9]*\)$))|((?<=(calc)).*\s*\/\s*[1-9][0-9]*\)$)|(var\(\-\-)/
+var SUPPORT_VAR_EXPRESSION = /var\(\-\-/
 var SUPPORT_CSS_UNIT = ['px', 'pt', 'wx', 'vp', 'fp']
 var SUPPORT_CSS_TIME_UNIT = ['ms', 's']
 var SUPPORT_CSS_PERCENTAGE_UNIT = ['px', '%', 'vp', 'fp']
@@ -251,6 +253,8 @@ var PERCENTAGE_LENGTH_VALIDATOR = function PERCENTAGE_LENGTH_VALIDATOR(v) {
   v = (v || '').toString().trim()
   if (v.match(ID_REGEXP)) {
     return { value: v }
+  } else if (v.match(SUPPORT_CSS_EXPRESSION)) {
+    return { value: v }
   } else {
     return LENGTH(v, SUPPORT_CSS_PERCENTAGE_UNIT)
   }
@@ -268,8 +272,9 @@ var PERCENTAGE_LENGTH_VALIDATOR = function PERCENTAGE_LENGTH_VALIDATOR(v) {
  */
 var LENGTH_VALIDATOR = function LENGTH_VALIDATOR(v) {
   v = (v || '').toString().trim()
-
-  if (v.match(ID_REGEXP)) {
+  if (v.match(SUPPORT_CSS_EXPRESSION)) {
+    return { value: v }
+  } else if (v.match(ID_REGEXP)) {
     return { value: v }
   } else {
     return LENGTH(v, SUPPORT_CSS_UNIT)
@@ -408,6 +413,9 @@ var ARRAY_LENGTH_VALIDATOR = function ARRAY_LENGTH_VALIDATOR(v) {
  */
 var COLOR_VALIDATOR = function COLOR_VALIDATOR(v) {
   v = (v || '').toString().trim()
+  if (v.match(SUPPORT_VAR_EXPRESSION)) {
+    return { value: v }
+  }
 
   if (v.indexOf('linear-gradient') >= 0) {
     let result = {
@@ -587,7 +595,7 @@ var SHORTHAND_VALIDATOR = function SHORTHAND_VALIDATOR(v, validateFunction, isAr
   v = (v || '').toString().trim()
   let value = []
   let reason = []
-  let results = v.split(/\s+/).map(validateFunction)
+  let results = v.split(/(?<!\+|\-|\*|\/|\,)\s+(?!\+|\-|\*|\/|\,)/).map(validateFunction)
   for (let i = 0; i < results.length; ++i) {
     let res = results[i]
     if (!res.value) {
@@ -674,12 +682,9 @@ var BORDER_VALIDATOR = function BORDER_VALIDATOR (value, name) {
   if (values && values.length <= 3) {
     for (let i = 0; i < values.length; i++) {
       const item = values[i]
-      for (let i = 0; i < rules.length; i++) {
-        if (rules[i].match(item)) {
+      if (rules[i].match(item)) {
           rules[i].action(item)
-          break
         }
-      }
       // style width color pass verification, but did not write in order, such as "1px red solid", should be error
       let orderIndex = -1
       order.forEach((item) => {
@@ -3043,6 +3048,184 @@ function genValidatorMap() {
 
 genValidatorMap()
 
+function getValueUnit(dem) {
+  var str = dem.toString()
+  var getValue = str.match(/[-]{0,1}[1-9][0-9]*/)
+  var getUnit = str.match(/px|cm|%|em|vp|fp/)
+  var result = {value: getValue, unit: getUnit}
+  return result
+}
+
+function isOperator(value) {
+  var operatorString = "+-*/()"
+  return operatorString.indexOf(value) > -1
+}
+
+function getPrioraty(value) {
+  switch(value) {
+    case '+':
+    case '-':
+      return 1
+    case '*':
+    case '/':
+      return 2
+    default:
+      return 0
+  }
+}
+
+function prioraty(o1, o2) {
+  return getPrioraty(o1) <= getPrioraty(o2)
+}
+
+function calcVarReplace() {
+  var res = cssVarFun(arguments[1])
+  return res
+}
+
+function dal2Rpn(exp) {
+  var inputStack = []
+  var outputStack = []
+  var outputQueue = []
+  var str = exp.replace(/calc/g, "").replace(/(?<!var\(\-\-\w+|var\(\-\-\w+\,\s*\w+)\)/g, " )").replace(/(?<!var)\(/g, "( ")
+  var inputStack=str.split(/(?<!\,)\s+/)
+  while(inputStack.length > 0) {
+    var cur = inputStack.shift()
+    if(isOperator(cur)) {
+      if(cur == '(') {
+        outputStack.push(cur)
+      } else if(cur == ')') {
+          var po = outputStack.pop()
+          while(po != '(' && outputStack.length > 0) {
+            outputQueue.push(po)
+            po = outputStack.pop()
+          }
+          if(po != '(') {
+            throw "error: unmatched ()"
+          }
+      } else {
+          while(prioraty(cur, outputStack[outputStack.length - 1]) && outputStack.length > 0) {
+            outputQueue.push(outputStack.pop())
+          }
+          outputStack.push(cur)
+      }
+    } else {
+        outputQueue.push(cur)
+       }
+  }
+  return outputQueue
+}
+
+function getResult(left, right, operator) {
+  if (left.match(/var/)) {
+    left = cssVarFun(left)
+    }
+  if (right.match(/var/)) {
+    right = cssVarFun(right)
+    }
+  var result, value, unit
+  var leftValue = getValueUnit(left)
+  var rightValue = getValueUnit(right)
+  if (left.match(/\(/) | right.match(/\(/)) {
+    result = left + ' ' + operator + ' ' + right
+    } else {
+        if (operator == '*') {
+          value = leftValue.value * rightValue.value
+          if (leftValue.unit == null) {
+              unit = rightValue.unit
+              } else { unit = leftValue.unit}
+          result = value + unit
+        } else if (operator == '/') {
+            if (rightValue != 0) {
+                value = leftValue.value / rightValue.value
+                unit = leftValue.unit
+                result = value + unit
+                }
+        } else if (operator == '+') {
+            if (JSON.stringify(leftValue.unit) == JSON.stringify(rightValue.unit)) {
+                value = parseInt(leftValue.value) + parseInt(rightValue.value)
+                unit = leftValue.unit
+                result = value + unit
+                } else result = '(' + left + ' ' + operator + ' ' + right + ')'
+        } else if (operator == '-') {
+            if (JSON.stringify(leftValue.unit) == JSON.stringify(rightValue.unit)) {
+                value = parseInt(leftValue.value) - parseInt(rightValue.value)
+                unit = leftValue.unit
+                result = value + unit
+                } else result = '(' + left + ' ' + operator + ' ' + right + ')'
+              }
+      }
+  return result
+}
+
+function evalRpn(rpnQueue) {
+  var outputStack = []
+  while(rpnQueue.length > 0) {
+    var cur = rpnQueue.shift()
+    if(!isOperator(cur)) {
+      outputStack.push(cur)
+    } else {
+        if(outputStack.length < 2) {
+          throw "unvalid stack length"
+        }
+        var sec = outputStack.pop()
+        var fir = outputStack.pop()
+        var res = getResult(fir, sec, cur)
+        outputStack.push(res)
+    }
+  }
+  if(outputStack.length != 1) {
+    //throw "unvalid expression"
+  } else {
+    if (outputStack[0].match(/[+-]/)) {
+        return 'calc' + outputStack[0]
+        } else {
+            return outputStack[0]
+            }
+  }
+}
+
+var cssPropData = []
+
+function saveCssProp(name, value) {
+  if (name.match(/\-\-/)) {
+    while (value.match(/var/)) {
+        var value = cssVarFun(value)
+    }
+    cssPropData.push({name: name,value: value})
+  }
+}
+
+function cssVarFun(value) {
+  var varValue
+  if (value.match(/calc/)) {
+    return value
+      } else {
+      if (value.match(/var/)) {
+        if (value.match(/\,/)) {
+            var cssVarFir = value.substring(0,value.indexOf(",")).replace("var(","").trim()
+            var cssVarSec = value.substring(value.indexOf(",")+1,value.length).replace(")","").trim()
+          } else {
+              var cssVarFir = value.replace("var(","").replace(")","").trim()
+              var cssVarSec = ""
+              }
+        varValue = cssVarSec
+        for(var i=0, len=cssPropData.length; i<len; i++) {
+          var cPDName = cssPropData[i].name.trim()
+          cssVarFir = util.hyphenedToCamelCase(cssVarFir)
+          if (cssVarFir == cPDName) {
+              varValue = cssPropData[i].value
+          }
+        }
+        result = {value: varValue}
+        return varValue
+       } else {
+            return value
+          }
+      }
+}
+
+
 /**
  * validate a CSS name/value pair
  *
@@ -3053,6 +3236,7 @@ genValidatorMap()
  * - log:{reason:string} or undefined
  */
 function validate(name, value) {
+  saveCssProp(name, value)
   var result, log
   var validator = validatorMap[name]
 
@@ -3084,6 +3268,19 @@ function validate(name, value) {
     log = {reason: 'WARNING: `' + util.camelCaseToHyphened(name) +
       '` is not a standard attribute name and may not be supported' + suggested}
   }
+
+  if (name != "border") {
+      var value = result.value
+      if (value.match(/var/)) {
+          value = cssVarFun(value)
+        }
+      if (value.match(/calc/)) {
+          value = dal2Rpn(value)
+          value = evalRpn(value)
+        }
+      result = {value: value}
+    }
+
   return {
     value: result.value,
     log: log
