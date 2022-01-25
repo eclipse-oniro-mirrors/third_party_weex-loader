@@ -2454,7 +2454,10 @@ var RICH_PROP_NAME_GROUPS = {
     dividerColor: COLOR_VALIDATOR,
     dividerHeight: LENGTH_VALIDATOR,
     dividerLength: LENGTH_VALIDATOR,
-    dividerOrigin: LENGTH_VALIDATOR
+    dividerOrigin: LENGTH_VALIDATOR,
+    scrollbarColor: COLOR_VALIDATOR,
+    scrollbarWidth: LENGTH_VALIDATOR,
+    scrollbarOffset: LENGTH_VALIDATOR
   },
   progress: {
     secondaryColor: COLOR_VALIDATOR,
@@ -2982,7 +2985,10 @@ var CARD_PROP_NAME_GROUPS = {
     dividerColor: COLOR_VALIDATOR,
     dividerHeight: LENGTH_VALIDATOR,
     dividerLength: LENGTH_VALIDATOR,
-    dividerOrigin: LENGTH_VALIDATOR
+    dividerOrigin: LENGTH_VALIDATOR,
+    scrollbarColor: COLOR_VALIDATOR,
+    scrollbarWidth: LENGTH_VALIDATOR,
+    scrollbarOffset: LENGTH_VALIDATOR
   }
 }
 
