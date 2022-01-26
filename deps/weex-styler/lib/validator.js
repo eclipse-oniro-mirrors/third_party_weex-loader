@@ -194,6 +194,7 @@ var URL_REGEXP = /^url\(\s*['"]?\s*([^()]+?)\s*['"]?\s*\)$/
 var NAME_REGEXP = /^[a-zA-Z_]+[a-zA-Z0-9-]*$/
 var INT_REGEXP = /^[-+]?[0-9]+$/
 var ID_REGEXP = /^\"@id\d+\"$/
+var NORMAL_REGEXP =  /^normal$/
 var AUTO_REGEXP = /^auto$/
 var DATE_REGEXP = /(^([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((1[02]|0?[13578])-([12][0-9]|3[01]|0?[1-9]))|((11|0?[469])-(30|[12][0-9]|0?[1-9]))|(0?2-(1[0-9]|2[0-8]|0?[1-9])))$)|(^(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[13579][26])00))-(0?)2-29$)/
 var TRANSFORM_REGEXP = /[0-9a-zA-Z]+\s*\(\s*[0-9(a-zA-Z-|%)\.]+\s*(,\s*[0-9(a-zA-Z-|%)\.]+)*\)/g
@@ -346,6 +347,16 @@ var LENGTH = function LENGTH(v, SUPPORT_UNIT) {
 
 var TEXT_INDENT_VALIDATOR = function TEXT_INDENT_VALIDATOR(v) {
   return LENGTH(v, SUPPORT_CSS_TEXT_INDENT_UNIT)
+}
+
+var TEXT_LINE_HEIGHT_VALIDATOR = function TEXT_LINE_HEIGHT_VALIDATOR(v) {
+  v = (v || '').toString().trim()
+
+  if (v.match(NORMAL_REGEXP)) {
+    return { value: v }
+  } else {
+    return LENGTH_VALIDATOR(v)
+  }
 }
 
 /**
@@ -2352,7 +2363,7 @@ var RICH_PROP_NAME_GROUPS = {
     textAlign: genEnumValidator(['start', 'end', 'left', 'center', 'right']),
     textOverflow: genEnumValidator(['clip', 'ellipsis']),
     textIndent: TEXT_INDENT_VALIDATOR,
-    lineHeight: LENGTH_VALIDATOR,
+    lineHeight: TEXT_LINE_HEIGHT_VALIDATOR,
     letterSpacing: LENGTH_VALIDATOR,
     minLines: NUMBER_VALIDATOR,
     maxLines: ANYTHING_VALIDATOR,
