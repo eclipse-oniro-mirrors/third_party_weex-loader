@@ -201,7 +201,7 @@ var TRANSFORM_ITEM_REGEXP = /^([0-9a-zA-Z]+)\s*\((.*)\)$/
 var FILTER_REGEXP = /^blur\(([1-9]\d*|0)(px|fp|vp)\)$/
 var FILTER_PERCENTAGE_REGEXP = /^blur\(([1-9]?\d|100)%\)$/
 var FILTER_STYLE_REGEXP = /^blur\(([1-9]?\d|100)%\)\s+[A-Za-z_]+$/
-var SUPPORT_CSS_EXPRESSION = /((?<=(calc)).*(\s+\+\s+|\s+\-\s+|[1-9][0-9]*\s*\*\s*|\s*\*\s*[1-9][0-9]*|\s*\/\s*[1-9][0-9]*))|(var\(\-\-)/
+var SUPPORT_CSS_EXPRESSION = /((?<=(calc)).*(\s+\+\s+|\s+\-\s+|[1-9][0-9]*\s+\*\s+|\s+\*\s+[1-9][0-9]*|\s+\/\s+[1-9][0-9]*))|(var\(\-\-)/
 var SUPPORT_VAR_EXPRESSION = /var\(\-\-/
 var SUPPORT_CSS_UNIT = ['px', 'pt', 'wx', 'vp', 'fp']
 var SUPPORT_CSS_TIME_UNIT = ['ms', 's']
@@ -3079,11 +3079,6 @@ function prioraty(o1, o2) {
   return getPrioraty(o1) <= getPrioraty(o2)
 }
 
-function calcVarReplace() {
-  var res = cssVarFun(arguments[1])
-  return res
-}
-
 function dal2Rpn(exp) {
   var inputStack = []
   var outputStack = []
@@ -3200,15 +3195,15 @@ function saveCssProp(name, value) {
 function cssVarFun(value) {
   if (value.match(/calc/)) {
     return value
-      } else {
+  } else {
       if (value.match(/var/)) {
         if (value.match(/\,/)) {
             var cssVarFir = value.substring(0,value.indexOf(",")).replace("var(","").trim()
             var cssVarSec = value.substring(value.indexOf(",")+1,value.length).replace(")","").trim()
-          } else {
+        } else {
               var cssVarFir = value.replace("var(","").replace(")","").trim()
               var cssVarSec = ""
-              }
+        }
         let varValue = cssVarSec
         for(var i=0, len=cssPropData.length; i<len; i++) {
           var cPDName = cssPropData[i].name.trim()
@@ -3217,12 +3212,11 @@ function cssVarFun(value) {
               varValue = cssPropData[i].value
           }
         }
-        result = {value: varValue}
         return varValue
-       } else {
-            return value
-          }
+      } else {
+        return value
       }
+  }
 }
 
 
@@ -3270,7 +3264,7 @@ function validate(name, value) {
   }
 
   if (name != "border") {
-      var value = result.value
+      var value = result.value.toString()
       if (value.match(/var/)) {
           value = cssVarFun(value)
         }
