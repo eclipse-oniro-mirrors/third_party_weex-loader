@@ -13,6 +13,9 @@ var LENGTH_REGEXP = /^[-+]?\d*\.?\d+(\S*)$/
 const CARD_SELECTOR = /^[\.#][A-Za-z0-9_\-]+$/
 const card = process.env.DEVICE_LEVEL === 'card'
 var ALL_SELECTOR_MATCHER = /^\*$/
+var ATTRIBUTE_SELECTOR = /^\[+(?![0-9])\w{0,}(\s*=\s*)((?![0-9])\w{0,}|\"\w{0,}\")\]+$/
+var ELEMENT_AND_ELEMENT = /^[a-zA-Z][a-zA-Z-]{0,}\s{0,}(\+\s{0,}[a-zA-Z][a-zA-Z-]{0,})+$/
+var CONTENT_ID = /^[a-zA-Z][a-zA-Z-]{0,}([#][a-zA-Z][a-zA-Z0-9-]{0,})(.+?::(after|before))+$/
 
 /**
  * expand margin、padding、border、borderWidth、borderColor、borderStyle properties、animation
@@ -273,7 +276,8 @@ function parse(code, done, resourcePath) {
             rule.selectors.forEach(function (selector) {
               const flag = card ? selector.match(CARD_SELECTOR) :
                 selector.match(SELECTOR_MATCHER) || selector.match(DESCENDANT_SELECTOR_MATCHER) ||
-                  selector.match(ALL_SELECTOR_MATCHER)
+                  selector.match(ALL_SELECTOR_MATCHER) || selector.match(ATTRIBUTE_SELECTOR) ||
+                  selector.match(ELEMENT_AND_ELEMENT) || selector.match(CONTENT_ID)
               if (flag) {
                 var className = selector
 
