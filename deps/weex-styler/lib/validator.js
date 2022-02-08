@@ -3079,11 +3079,6 @@ function prioraty(o1, o2) {
   return getPrioraty(o1) <= getPrioraty(o2)
 }
 
-function calcVarReplace() {
-  var res = cssVarFun(arguments[1])
-  return res
-}
-
 function dal2Rpn(exp) {
   var inputStack = []
   var outputStack = []
@@ -3200,15 +3195,15 @@ function saveCssProp(name, value) {
 function cssVarFun(value) {
   if (value.match(/calc/)) {
     return value
-      } else {
+  } else {
       if (value.match(/var/)) {
         if (value.match(/\,/)) {
             var cssVarFir = value.substring(0,value.indexOf(",")).replace("var(","").trim()
             var cssVarSec = value.substring(value.indexOf(",")+1,value.length).replace(")","").trim()
-          } else {
+        } else {
               var cssVarFir = value.replace("var(","").replace(")","").trim()
               var cssVarSec = ""
-              }
+        }
         let varValue = cssVarSec
         for(var i=0, len=cssPropData.length; i<len; i++) {
           var cPDName = cssPropData[i].name.trim()
@@ -3217,12 +3212,11 @@ function cssVarFun(value) {
               varValue = cssPropData[i].value
           }
         }
-        result = {value: varValue}
         return varValue
-       } else {
-            return value
-          }
+      } else {
+        return value
       }
+  }
 }
 
 
