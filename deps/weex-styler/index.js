@@ -5,6 +5,7 @@ var util = require('./lib/util')
 var validateItem = require('./lib/validator').validate
 var fs = require('fs')
 var path = require('path')
+var lodash = require('lodash')
 
 var SELECTOR_MATCHER = /^[\.#]?[A-Za-z0-9_\-:]+$/
 var DESCENDANT_SELECTOR_MATCHER = /^([.#]?[A-Za-z0-9_-]+(\s+|\s*>\s*))+([.#]?[A-Za-z0-9_\-:]+)$/
@@ -530,6 +531,7 @@ function parseImport(resourcePath, rule, jsonStyle, log) {
   if(!resourcePath) {
     return
   }
+  const resourcePath_ = resourcePath
   let importString = rule.import
   let importPath
   let mediaString = ''
@@ -545,6 +547,7 @@ function parseImport(resourcePath, rule, jsonStyle, log) {
   }
   if (fs.existsSync(importPath)) {
     source = fs.readFileSync(importPath).toString()
+    addPreviewCSS(importPath, resourcePath_)
   } else {
     log.push({
       line: rule.position.start.line,
@@ -563,6 +566,24 @@ function parseImport(resourcePath, rule, jsonStyle, log) {
       jsonStyle = Object.assign(jsonStyle, obj.jsonStyle)
     }
   }, importPath)
+}
+
+function addPreviewCSS(importPath, resourcePath) {
+  importPath = path.join(importPath);
+  resourcePath = path.join(resourcePath);
+  if (fs.existsSync(process.env.watchCSSFiles)) {
+    const content = JSON.parse(fs.readFileSync(process.env.watchCSSFiles));
+    if (content['entry'] && content['entry'][resourcePath]) {
+      content[importPath] = content[importPath] || [];
+      content[importPath].push(resourcePath);
+      content[importPath] = lodash.uniqWith(content[importPath], lodash.isEqual);
+    } else if (content[resourcePath]) {
+      content[importPath] = content[importPath] || [];
+      content[importPath].push(...content[resourcePath]);
+      content[importPath] = lodash.uniqWith(content[importPath], lodash.isEqual);
+    }
+    fs.writeFileSync(process.env.watchCSSFiles, JSON.stringify(content, null, 2));
+  }
 }
 
 /**
