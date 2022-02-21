@@ -3242,6 +3242,19 @@ function validate(name, value) {
     /* istanbul ignore else */
     else {
       result = {value: value}
+      if (name != "border") {
+        var value = result.value.toString()
+        if (value.match(/var/)) {
+          value = cssVarFun(value)
+        }
+        if (value.match(/calc/)) {
+          value = dal2Rpn(value)
+          value = evalRpn(value)
+        } else {
+          value = value
+        }
+        result = {value: value}
+      }         
     }
     if (result.reason) {
       log = {reason: result.reason(name, value, result.value)}
@@ -3263,17 +3276,6 @@ function validate(name, value) {
       '` is not a standard attribute name and may not be supported' + suggested}
   }
 
-  if (name != "border") {
-      var value = result.value.toString()
-      if (value.match(/var/)) {
-          value = cssVarFun(value)
-        }
-      if (value.match(/calc/)) {
-          value = dal2Rpn(value)
-          value = evalRpn(value)
-        }
-      result = {value: value}
-    }
 
   return {
     value: result.value,
