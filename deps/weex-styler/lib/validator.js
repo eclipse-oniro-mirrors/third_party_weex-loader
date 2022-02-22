@@ -201,7 +201,7 @@ var TRANSFORM_ITEM_REGEXP = /^([0-9a-zA-Z]+)\s*\((.*)\)$/
 var FILTER_REGEXP = /^blur\(([1-9]\d*|0)(px|fp|vp)\)$/
 var FILTER_PERCENTAGE_REGEXP = /^blur\(([1-9]?\d|100)%\)$/
 var FILTER_STYLE_REGEXP = /^blur\(([1-9]?\d|100)%\)\s+[A-Za-z_]+$/
-var SUPPORT_CSS_EXPRESSION = /((?<=(calc)).*(\s+\+\s+|\s+\-\s+|[1-9][0-9]*\s+\*\s+|\s+\*\s+[1-9][0-9]*|\s+\/\s+[1-9][0-9]*))|(var\(\-\-)/
+var SUPPORT_CSS_EXPRESSION = /calc\(|var\(\-\-/
 var SUPPORT_VAR_EXPRESSION = /var\(\-\-/
 var SUPPORT_CSS_UNIT = ['px', 'pt', 'wx', 'vp', 'fp']
 var SUPPORT_CSS_TIME_UNIT = ['ms', 's']
@@ -406,6 +406,26 @@ var ARRAY_LENGTH_VALIDATOR = function ARRAY_LENGTH_VALIDATOR(v) {
  * the values below is valid
  * - hex color value (#xxxxxx or #xxx)
  * - basic and extended color keywords in CSS spec
+ * - expression
+ *
+ * @param {string} v
+ * @return {function} a function to return
+ * - value: string|null
+ * - reason(k, v, result)
+ */
+var COLOR_VAR_VALIDATOR = function COLOR_VAR_VALIDATOR(v) {
+  v = (v || '').toString().trim()
+  if (v.match(SUPPORT_VAR_EXPRESSION)) {
+    return { value: v }
+  } else {
+    return COLOR_VALIDATOR(v)
+  }
+}
+
+/**
+ * the values below is valid
+ * - hex color value (#xxxxxx or #xxx)
+ * - basic and extended color keywords in CSS spec
  *
  * @param {string} v
  * @return {function} a function to return
@@ -414,9 +434,6 @@ var ARRAY_LENGTH_VALIDATOR = function ARRAY_LENGTH_VALIDATOR(v) {
  */
 var COLOR_VALIDATOR = function COLOR_VALIDATOR(v) {
   v = (v || '').toString().trim()
-  if (v.match(SUPPORT_VAR_EXPRESSION)) {
-    return { value: v }
-  }
 
   if (v.indexOf('linear-gradient') >= 0) {
     let result = {
@@ -562,13 +579,13 @@ var COLOR_REG = function COLOR_REG(v) {
 var SHORTHAND_COLOR_VALIDATOR = function SHORTHAND_COLOR_VALIDATOR(v) {
   v = (v || '').toString().trim()
   v = v.replace(/\s*,\s+/g, ',')
-  return SHORTHAND_VALIDATOR(v, COLOR_VALIDATOR)
+  return SHORTHAND_VALIDATOR(v, COLOR_VAR_VALIDATOR)
 }
 
 var ARRAY_COLOR_VALIDATOR = function ARRAY_COLOR_VALIDATOR(v) {
   v = (v || '').toString().trim()
   var isArray = true
-  return SHORTHAND_VALIDATOR(v.replace(/,/g, ' '), COLOR_VALIDATOR, isArray)
+  return SHORTHAND_VALIDATOR(v.replace(/,/g, ' '), COLOR_VAR_VALIDATOR, isArray)
 }
 
 var SHORTHAND_STYLE_VALIDATOR = function SHORTHAND_STYLE_VALIDATOR(v) {
@@ -663,9 +680,9 @@ var BORDER_VALIDATOR = function BORDER_VALIDATOR (value, name) {
       }
     },
     {
-      match (item) { return COLOR_VALIDATOR(item).value },
+      match (item) { return COLOR_VAR_VALIDATOR(item).value },
       action (item) {
-        validatorResult = COLOR_VALIDATOR(item)
+        validatorResult = COLOR_VAR_VALIDATOR(item)
         order.push(2)
         res.push({
           value: validatorResult.value,
@@ -787,9 +804,9 @@ var BOX_SHADOW_VALIDATOR = function BOX_SHADOW_VALIDATOR(value, name) {
       }
     },
     {
-      match (item) { return COLOR_VALIDATOR(item).value },
+      match (item) { return COLOR_VAR_VALIDATOR(item).value },
       action (item) {
-        validatorResult = COLOR_VALIDATOR(item)
+        validatorResult = COLOR_VAR_VALIDATOR(item)
         order.push(4)
         res.push({
           value: validatorResult.value,
@@ -1486,7 +1503,7 @@ function processValueItem(v, values, resultValues, reasonMaps, length) {
       }
     }
     if (value) {
-      let colorResult = COLOR_VALIDATOR(value)
+      let colorResult = COLOR_VAR_VALIDATOR(value)
       if (util.isValidValue(colorResult.value)) {
         tempValues.unshift(colorResult.value)
       }
@@ -1815,8 +1832,8 @@ var MYLOCATION_VALIDATOR = function MYLOCATION_VALIDATOR(v) {
   let reason = null
   if (realValues && realValues.length <= 3) {
     realValues.forEach(function(realValue) {
-      if (typeof COLOR_VALIDATOR(realValue).value == 'string') {
-        resultValues.push(COLOR_VALIDATOR(realValue).value)
+      if (typeof COLOR_VAR_VALIDATOR(realValue).value == 'string') {
+        resultValues.push(COLOR_VAR_VALIDATOR(realValue).value)
         valuesOrder.push(0)
       } else if (typeof URL_VALIDATOR(realValue).value == 'string') {
         resultValues.push(URL_VALIDATOR(realValue).value)
@@ -2185,7 +2202,7 @@ var Color_Picker_VALIDATOR = function Color_Picker_VALIDATOR(v) {
     cValues: []
   }
   num.forEach(element => {
-    base.cValues.push(COLOR_VALIDATOR(element).value);
+    base.cValues.push(COLOR_VAR_VALIDATOR(element).value);
   });
   return {
     value: JSON.stringify(base)
@@ -2211,20 +2228,20 @@ var RICH_PROP_NAME_GROUPS = {
     marginBottom: AUTO_PERCENTAGE_LENGTH_VALIDATOR,
     marginStart: PERCENTAGE_LENGTH_VALIDATOR,
     marginEnd: PERCENTAGE_LENGTH_VALIDATOR,
-    placeholderColor: COLOR_VALIDATOR,
-    selectedColor: COLOR_VALIDATOR,
-    caretColor: COLOR_VALIDATOR,
+    placeholderColor: COLOR_VAR_VALIDATOR,
+    selectedColor: COLOR_VAR_VALIDATOR,
+    caretColor: COLOR_VAR_VALIDATOR,
     strokeWidth: LENGTH_VALIDATOR,
-    progressColor: COLOR_VALIDATOR,
+    progressColor: COLOR_VAR_VALIDATOR,
     slideWidth: LENGTH_VALIDATOR,
     slideMargin: LENGTH_VALIDATOR,
     resizeMode: genEnumValidator(['cover', 'contain', 'stretch', 'center']),
     columns: NUMBER_VALIDATOR,
     columnSpan: NUMBER_VALIDATOR,
-    maskColor: COLOR_VALIDATOR,
+    maskColor: COLOR_VAR_VALIDATOR,
     mylocation: MYLOCATION_VALIDATOR,
-    mylocationFillColor: COLOR_VALIDATOR,
-    mylocationStrokeColor: COLOR_VALIDATOR,
+    mylocationFillColor: COLOR_VAR_VALIDATOR,
+    mylocationStrokeColor: COLOR_VAR_VALIDATOR,
     mylocationIconPath: URL_VALIDATOR,
     displayIndex: NUMBER_VALIDATOR,
     aspectRatio: NUMBER_VALIDATOR,
@@ -2238,7 +2255,7 @@ var RICH_PROP_NAME_GROUPS = {
     boxShadowV: LENGTH_VALIDATOR,
     boxShadowBlur: LENGTH_VALIDATOR,
     boxShadowSpread: LENGTH_VALIDATOR,
-    boxShadowColor: COLOR_VALIDATOR,
+    boxShadowColor: COLOR_VAR_VALIDATOR,
     filter: FILTER_VALIDATOR,
     backdropFilter: FILTER_VALIDATOR,
     windowFilter: FILTER_PERCENTAGE_VALIDATOR,
@@ -2264,10 +2281,10 @@ var RICH_PROP_NAME_GROUPS = {
     borderRightWidth: LENGTH_VALIDATOR,
     borderBottomWidth: LENGTH_VALIDATOR,
     borderColor: SHORTHAND_COLOR_VALIDATOR,
-    borderLeftColor: COLOR_VALIDATOR,
-    borderTopColor: COLOR_VALIDATOR,
-    borderRightColor: COLOR_VALIDATOR,
-    borderBottomColor: COLOR_VALIDATOR,
+    borderLeftColor: COLOR_VAR_VALIDATOR,
+    borderTopColor: COLOR_VAR_VALIDATOR,
+    borderRightColor: COLOR_VAR_VALIDATOR,
+    borderBottomColor: COLOR_VAR_VALIDATOR,
     borderStyle: SHORTHAND_STYLE_VALIDATOR,
     borderTopStyle: STYLE_VALIDATOR,
     borderRightStyle: STYLE_VALIDATOR,
@@ -2295,8 +2312,8 @@ var RICH_PROP_NAME_GROUPS = {
     indicatorRight: PERCENTAGE_LENGTH_VALIDATOR,
     indicatorBottom: PERCENTAGE_LENGTH_VALIDATOR,
     indicatorLeft: PERCENTAGE_LENGTH_VALIDATOR,
-    indicatorColor: COLOR_VALIDATOR,
-    indicatorSelectedColor: COLOR_VALIDATOR
+    indicatorColor: COLOR_VAR_VALIDATOR,
+    indicatorSelectedColor: COLOR_VAR_VALIDATOR
   },
   animation: {
     animationDuration: TIME_VALIDATOR,
@@ -2333,7 +2350,7 @@ var RICH_PROP_NAME_GROUPS = {
   common: {
     opacity: NUMBER_VALIDATOR,
     background: BACKGROUND_VALIDATOR,
-    backgroundColor: COLOR_VALIDATOR,
+    backgroundColor: COLOR_VAR_VALIDATOR,
     backgroundImage: URL_VALIDATOR,
     backgroundRepeat: genEnumValidator(['repeat', 'no-repeat', 'repeat-x', 'repeat-y']),
     visibility: genEnumValidator(['visible', 'hidden']),
@@ -2341,14 +2358,14 @@ var RICH_PROP_NAME_GROUPS = {
     backgroundSize: BACKGROUND_SIZE_VALIDATOR,
     backgroundPosition: BACKGROUND_POSITION_VALIDATOR,
     display: genEnumValidator(['flex', 'none', 'grid']),
-    imageFill: COLOR_VALIDATOR,
+    imageFill: COLOR_VAR_VALIDATOR,
     maskImage: MASK_VALIDATOR,
     maskPosition: BACKGROUND_POSITION_VALIDATOR,
     maskSize: BACKGROUND_SIZE_VALIDATOR
   },
   text: {
     lines: INTEGER_VALIDATOR,
-    color: COLOR_VALIDATOR,
+    color: COLOR_VAR_VALIDATOR,
     fontSize: LENGTH_VALIDATOR,
     fontStyle: genEnumValidator(['normal', 'italic']),
     fontFamily: ANYTHING_VALIDATOR,
@@ -2375,9 +2392,9 @@ var RICH_PROP_NAME_GROUPS = {
     dx: PERCENTAGE_LENGTH_VALIDATOR,
     dy: PERCENTAGE_LENGTH_VALIDATOR,
     rotate: NUMBER_VALIDATOR,
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeOpacity: NUMBER_VALIDATOR,
     strokeWidth: LENGTH_VALIDATOR,
     fontFeatureSettings: ANYTHING_VALIDATOR
@@ -2387,25 +2404,25 @@ var RICH_PROP_NAME_GROUPS = {
     boundaryRowOffset: LENGTH_VALIDATOR,
     colSpace: LENGTH_VALIDATOR,
     dailyFiveRowSpace: LENGTH_VALIDATOR,
-    dayColor: COLOR_VALIDATOR,
+    dayColor: COLOR_VAR_VALIDATOR,
     dayFontSize: LENGTH_VALIDATOR,
     dayHeight: LENGTH_VALIDATOR,
     dayWidth: LENGTH_VALIDATOR,
-    focusedAreaBackgroundColor: COLOR_VALIDATOR,
+    focusedAreaBackgroundColor: COLOR_VAR_VALIDATOR,
     focusedAreaRadius: LENGTH_VALIDATOR,
-    focusedDayColor: COLOR_VALIDATOR,
-    focusedLunarColor: COLOR_VALIDATOR,
+    focusedDayColor: COLOR_VAR_VALIDATOR,
+    focusedLunarColor: COLOR_VAR_VALIDATOR,
     gregorianCalendarHeight: LENGTH_VALIDATOR,
-    lunarColor: COLOR_VALIDATOR,
+    lunarColor: COLOR_VAR_VALIDATOR,
     lunarDayFontSize: LENGTH_VALIDATOR,
     lunarDayYAxisOffset: LENGTH_VALIDATOR,
     lunarHeight: LENGTH_VALIDATOR,
-    markLunarColor: COLOR_VALIDATOR,
-    nonCurrentMonthDayColor: COLOR_VALIDATOR,
-    nonCurrentMonthLunarColor: COLOR_VALIDATOR,
-    nonCurrentMonthOffDayMarkColor: COLOR_VALIDATOR,
-    nonCurrentMonthWorkDayMarkColor: COLOR_VALIDATOR,
-    offDayMarkColor: COLOR_VALIDATOR,
+    markLunarColor: COLOR_VAR_VALIDATOR,
+    nonCurrentMonthDayColor: COLOR_VAR_VALIDATOR,
+    nonCurrentMonthLunarColor: COLOR_VAR_VALIDATOR,
+    nonCurrentMonthOffDayMarkColor: COLOR_VAR_VALIDATOR,
+    nonCurrentMonthWorkDayMarkColor: COLOR_VAR_VALIDATOR,
+    offDayMarkColor: COLOR_VAR_VALIDATOR,
     offDayMarkSize: LENGTH_VALIDATOR,
     scheduleMarkerRadius: LENGTH_VALIDATOR,
     scheduleMarkerXAxisOffset: LENGTH_VALIDATOR,
@@ -2415,13 +2432,13 @@ var RICH_PROP_NAME_GROUPS = {
     underscoreXAxisOffset: LENGTH_VALIDATOR,
     underscoreYAxisOffset: LENGTH_VALIDATOR,
     weekAndDayRowSpace: LENGTH_VALIDATOR,
-    weekColor: COLOR_VALIDATOR,
+    weekColor: COLOR_VAR_VALIDATOR,
     weekFontSize: LENGTH_VALIDATOR,
     weekHeight: LENGTH_VALIDATOR,
     weekWidth: LENGTH_VALIDATOR,
-    weekendDayColor: COLOR_VALIDATOR,
-    weekendLunarColor: COLOR_VALIDATOR,
-    workDayMarkColor: COLOR_VALIDATOR,
+    weekendDayColor: COLOR_VAR_VALIDATOR,
+    weekendLunarColor: COLOR_VAR_VALIDATOR,
+    workDayMarkColor: COLOR_VAR_VALIDATOR,
     workDayMarkSize: LENGTH_VALIDATOR,
     workStateHorizontalMovingDistance: LENGTH_VALIDATOR,
     workStateVerticalMovingDistance: LENGTH_VALIDATOR,
@@ -2448,22 +2465,22 @@ var RICH_PROP_NAME_GROUPS = {
   },
   customized: {
     itemSize: LENGTH_VALIDATOR,
-    itemColor: COLOR_VALIDATOR,
-    itemSelectedColor: COLOR_VALIDATOR,
-    textColor: COLOR_VALIDATOR,
-    timeColor: COLOR_VALIDATOR,
-    textHighlightColor: COLOR_VALIDATOR
+    itemColor: COLOR_VAR_VALIDATOR,
+    itemSelectedColor: COLOR_VAR_VALIDATOR,
+    textColor: COLOR_VAR_VALIDATOR,
+    timeColor: COLOR_VAR_VALIDATOR,
+    textHighlightColor: COLOR_VAR_VALIDATOR
   },
   list: {
     itemExtent: PERCENTAGE_LENGTH_VALIDATOR,
-    fadeColor: COLOR_VALIDATOR,
-    dividerColor: COLOR_VALIDATOR,
+    fadeColor: COLOR_VAR_VALIDATOR,
+    dividerColor: COLOR_VAR_VALIDATOR,
     dividerHeight: LENGTH_VALIDATOR,
     dividerLength: LENGTH_VALIDATOR,
     dividerOrigin: LENGTH_VALIDATOR
   },
   progress: {
-    secondaryColor: COLOR_VALIDATOR,
+    secondaryColor: COLOR_VAR_VALIDATOR,
     scaleWidth: LENGTH_VALIDATOR,
     scaleNumber: NUMBER_VALIDATOR,
     startAngle: ANGLE_VALIDATOR,
@@ -2477,16 +2494,16 @@ var RICH_PROP_NAME_GROUPS = {
     weights: ARRAY_NUMBER_VALIDATOR
   },
   navigation: {
-    titleColor: COLOR_VALIDATOR,
-    subtitleColor: COLOR_VALIDATOR
+    titleColor: COLOR_VAR_VALIDATOR,
+    subtitleColor: COLOR_VAR_VALIDATOR
   },
   button: {
     iconWidth: LENGTH_VALIDATOR,
     iconHeight: LENGTH_VALIDATOR
   },
   switch: {
-    textonColor: COLOR_VALIDATOR,
-    textoffColor: COLOR_VALIDATOR,
+    textonColor: COLOR_VAR_VALIDATOR,
+    textoffColor: COLOR_VAR_VALIDATOR,
     textPadding: LENGTH_VALIDATOR
   },
   share: {
@@ -2507,11 +2524,11 @@ var RICH_PROP_NAME_GROUPS = {
   pickerView: {
     selectedFontSize: LENGTH_VALIDATOR,
     selectedFontFamily: ANYTHING_VALIDATOR,
-    focusColor: COLOR_VALIDATOR,
+    focusColor: COLOR_VAR_VALIDATOR,
     focusFontSize: LENGTH_VALIDATOR,
     focusFontFamily: ANYTHING_VALIDATOR,
     disappearFontSize: LENGTH_VALIDATOR,
-    disappearColor: COLOR_VALIDATOR
+    disappearColor: COLOR_VAR_VALIDATOR
   },
   colorpicker: {
     colorPickerColor: Color_Picker_VALIDATOR
@@ -2520,18 +2537,18 @@ var RICH_PROP_NAME_GROUPS = {
     colorPickerColor: Color_Picker_VALIDATOR
   },
   slider: {
-    blockColor: COLOR_VALIDATOR,
+    blockColor: COLOR_VAR_VALIDATOR,
   },
   badge: {
-    badgeColor: COLOR_VALIDATOR,
+    badgeColor: COLOR_VAR_VALIDATOR,
     badgeSize: LENGTH_VALIDATOR
   },
   ellipse: {
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     fillRule: genEnumValidator(['nonzero', 'evenodd']),
     opacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR,
     strokeLinejoin: genEnumValidator(['bevel', 'miter', 'round']),
@@ -2548,7 +2565,7 @@ var RICH_PROP_NAME_GROUPS = {
   },
   rect: {
     id: ANYTHING_VALIDATOR,
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     fillRule: genEnumValidator(['nonzero', 'evenodd']),
     opacity: NUMBER_VALIDATOR,
@@ -2565,15 +2582,15 @@ var RICH_PROP_NAME_GROUPS = {
     y: PERCENTAGE_LENGTH_VALIDATOR,
     rx: PERCENTAGE_LENGTH_VALIDATOR,
     ry: PERCENTAGE_LENGTH_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR
   },
   circle: {
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     fillRule: genEnumValidator(['nonzero', 'evenodd']),
     opacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR,
     strokeLinejoin: genEnumValidator(['bevel', 'miter', 'round']),
@@ -2600,16 +2617,16 @@ var RICH_PROP_NAME_GROUPS = {
     transform: TRANSFORM_VALIDATOR,
     id: ANYTHING_VALIDATOR,
     d: ANYTHING_VALIDATOR,
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
-    stroke: COLOR_VALIDATOR
+    stroke: COLOR_VAR_VALIDATOR
   },
   svg: {
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     fillRule: genEnumValidator(['nonzero', 'evenodd']),
     opacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR,
     strokeLinejoin: genEnumValidator(['bevel', 'miter', 'round']),
@@ -2626,10 +2643,10 @@ var RICH_PROP_NAME_GROUPS = {
     viewbox: ANYTHING_VALIDATOR
   },
   polygon: {
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     opacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR,
     strokeLinejoin: genEnumValidator(['bevel', 'miter', 'round']),
@@ -2643,10 +2660,10 @@ var RICH_PROP_NAME_GROUPS = {
     fillRule: genEnumValidator(['nonzero', 'evenodd'])
   },
   polyline: {
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     opacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR,
     strokeLinejoin: genEnumValidator(['bevel', 'miter', 'round']),
@@ -2667,9 +2684,9 @@ var RICH_PROP_NAME_GROUPS = {
     dy: PERCENTAGE_LENGTH_VALIDATOR,
     rotate: NUMBER_VALIDATOR,
     fontSize: LENGTH_VALIDATOR,
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeOpacity: NUMBER_VALIDATOR,
     strokeWidth: LENGTH_VALIDATOR
   },
@@ -2678,9 +2695,9 @@ var RICH_PROP_NAME_GROUPS = {
     path: ANYTHING_VALIDATOR,
     startOffset: PERCENTAGE_LENGTH_VALIDATOR,
     fontSize: LENGTH_VALIDATOR,
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeOpacity: NUMBER_VALIDATOR,
     strokeWidth: LENGTH_VALIDATOR
   },
@@ -2730,10 +2747,10 @@ var RICH_PROP_NAME_GROUPS = {
     type: genEnumValidator(['translate', 'scale', 'skewX', 'skewY'])
   },
   line: {
-    fill: COLOR_VALIDATOR,
+    fill: COLOR_VAR_VALIDATOR,
     fillOpacity: NUMBER_VALIDATOR,
     opacity: NUMBER_VALIDATOR,
-    stroke: COLOR_VALIDATOR,
+    stroke: COLOR_VAR_VALIDATOR,
     strokeDasharray: ANYTHING_VALIDATOR,
     strokeDashoffset: LENGTH_VALIDATOR,
     strokeLinejoin: genEnumValidator(['bevel', 'miter', 'round']),
@@ -2793,12 +2810,12 @@ var LITE_PROP_NAME_GROUPS = {
   },
   common: {
     opacity: NUMBER_VALIDATOR,
-    backgroundColor: COLOR_VALIDATOR,
+    backgroundColor: COLOR_VAR_VALIDATOR,
     backgroundImage: URL_VALIDATOR,
     display: genEnumValidator(['flex', 'none']),
   },
   text: {
-    color: COLOR_VALIDATOR,
+    color: COLOR_VAR_VALIDATOR,
     fontSize: LENGTH_VALIDATOR,
     fontFamily: genEnumValidator(['HYQiHei-65S']),
     letterSpacing: LENGTH_VALIDATOR,
@@ -2806,10 +2823,10 @@ var LITE_PROP_NAME_GROUPS = {
     textOverflow: genEnumValidator(['clip', 'ellipsis']),
   },
   slider: {
-    selectedColor: COLOR_VALIDATOR,
+    selectedColor: COLOR_VAR_VALIDATOR,
     selectedFontSize: LENGTH_VALIDATOR,
     selectedFontFamily: genEnumValidator(['HYQiHei-65S']),
-    blockColor: COLOR_VALIDATOR,
+    blockColor: COLOR_VAR_VALIDATOR,
   },
   transform: {
     transform: TRANSFORM_VALIDATOR,
@@ -2855,7 +2872,7 @@ var CARD_PROP_NAME_GROUPS = {
     boxShadowV: LENGTH_VALIDATOR,
     boxShadowBlur: LENGTH_VALIDATOR,
     boxShadowSpread: LENGTH_VALIDATOR,
-    boxShadowColor: COLOR_VALIDATOR,
+    boxShadowColor: COLOR_VAR_VALIDATOR,
     filter: FILTER_VALIDATOR,
     backdropFilter: FILTER_VALIDATOR,
     windowFilter: FILTER_PERCENTAGE_VALIDATOR
@@ -2879,10 +2896,10 @@ var CARD_PROP_NAME_GROUPS = {
     borderRightWidth: LENGTH_VALIDATOR,
     borderBottomWidth: LENGTH_VALIDATOR,
     borderColor: SHORTHAND_COLOR_VALIDATOR,
-    borderLeftColor: COLOR_VALIDATOR,
-    borderTopColor: COLOR_VALIDATOR,
-    borderRightColor: COLOR_VALIDATOR,
-    borderBottomColor: COLOR_VALIDATOR,
+    borderLeftColor: COLOR_VAR_VALIDATOR,
+    borderTopColor: COLOR_VAR_VALIDATOR,
+    borderRightColor: COLOR_VAR_VALIDATOR,
+    borderBottomColor: COLOR_VAR_VALIDATOR,
     borderStyle: genEnumValidator(['solid', 'dashed', 'dotted']),
     borderTopStyle: genEnumValidator(['solid', 'dashed', 'dotted']),
     borderRightStyle: genEnumValidator(['solid', 'dashed', 'dotted']),
@@ -2920,7 +2937,7 @@ var CARD_PROP_NAME_GROUPS = {
   },
   common: {
     background: BACKGROUND_VALIDATOR,
-    backgroundColor: COLOR_VALIDATOR,
+    backgroundColor: COLOR_VAR_VALIDATOR,
     backgroundImage: URL_VALIDATOR,
     backgroundSize: BACKGROUND_SIZE_VALIDATOR,
     backgroundRepeat: genEnumValidator(['repeat', 'no-repeat', 'repeat-x', 'repeat-y']),
@@ -2929,13 +2946,13 @@ var CARD_PROP_NAME_GROUPS = {
     appearingDuration: NUMBER_VALIDATOR,
     visibility: genEnumValidator(['visible', 'hidden']),
     display: genEnumValidator(['flex', 'none', 'grid']),
-    imageFill: COLOR_VALIDATOR,
+    imageFill: COLOR_VAR_VALIDATOR,
     maskImage: MASK_VALIDATOR,
     maskPosition: BACKGROUND_POSITION_VALIDATOR,
     maskSize: BACKGROUND_SIZE_VALIDATOR
   },
   text: {
-    color: COLOR_VALIDATOR,
+    color: COLOR_VAR_VALIDATOR,
     fontSize: LENGTH_VALIDATOR,
     allowScale: genEnumValidator(['true', 'false']),
     letterSpacing: LENGTH_VALIDATOR,
@@ -2956,7 +2973,7 @@ var CARD_PROP_NAME_GROUPS = {
     adaptHeight: genEnumValidator(['true', 'false'])
   },
   progress: {
-    secondaryColor: COLOR_VALIDATOR,
+    secondaryColor: COLOR_VAR_VALIDATOR,
     scaleWidth: LENGTH_VALIDATOR,
     scaleNumber: NUMBER_VALIDATOR,
     startAngle: ANGLE_VALIDATOR,
@@ -2973,7 +2990,7 @@ var CARD_PROP_NAME_GROUPS = {
     strokeWidth: LENGTH_VALIDATOR,
   },
   button: {
-    textColor: COLOR_VALIDATOR,
+    textColor: COLOR_VAR_VALIDATOR,
     iconWidth: LENGTH_VALIDATOR,
     iconHeight: LENGTH_VALIDATOR
   },
@@ -2984,8 +3001,8 @@ var CARD_PROP_NAME_GROUPS = {
   },
   list: {
     itemExtent: PERCENTAGE_LENGTH_VALIDATOR,
-    fadeColor: COLOR_VALIDATOR,
-    dividerColor: COLOR_VALIDATOR,
+    fadeColor: COLOR_VAR_VALIDATOR,
+    dividerColor: COLOR_VAR_VALIDATOR,
     dividerHeight: LENGTH_VALIDATOR,
     dividerLength: LENGTH_VALIDATOR,
     dividerOrigin: LENGTH_VALIDATOR
@@ -3083,101 +3100,149 @@ function dal2Rpn(exp) {
   var inputStack = []
   var outputStack = []
   var outputQueue = []
-  var str = exp.replace(/calc/g, "").replace(/(?<!var\(\-\-\w+|var\(\-\-\w+\,\s*\w+)\)/g, " )").replace(/(?<!var)\(/g, "( ")
+  var str =
+    exp.replace(/calc/g, "").replace(/(?<!var\(\-\-\w+|var\(\-\-\w+\,\s*\w+)\)/g, " )").replace(/(?<!var)\(/g, "( ")
   var inputStack=str.split(/(?<!\,)\s+/)
+  var value, log
   while(inputStack.length > 0) {
     var cur = inputStack.shift()
     if(isOperator(cur)) {
       if(cur == '(') {
         outputStack.push(cur)
       } else if(cur == ')') {
-          var po = outputStack.pop()
-          while(po != '(' && outputStack.length > 0) {
-            outputQueue.push(po)
-            po = outputStack.pop()
-          }
-          if(po != '(') {
-            throw "error: unmatched ()"
-          }
+        var po = outputStack.pop()
+        while(po != '(' && outputStack.length > 0) {
+          outputQueue.push(po)
+          po = outputStack.pop()
+        }
+        if(po != '(') {
+          log = {reason: 'ERROR: Expression unmatched ()'}
+        }
       } else {
-          while(prioraty(cur, outputStack[outputStack.length - 1]) && outputStack.length > 0) {
-            outputQueue.push(outputStack.pop())
-          }
-          outputStack.push(cur)
+        while(prioraty(cur, outputStack[outputStack.length - 1]) && outputStack.length > 0) {
+          outputQueue.push(outputStack.pop())
+        }
+        outputStack.push(cur)
       }
     } else {
-        outputQueue.push(cur)
-       }
+      outputQueue.push(cur)
+    }
   }
-  return outputQueue
+  return {
+    value: outputQueue,
+    log: log
+  }
+}
+
+function checkComputation(left, right, operator) {
+  var value, log
+  if (operator == '*') {
+    if ((right.match(/[a-zA-Z]/) && left.match(/[a-zA-Z]/)) || (!right.match(/[a-zA-Z]/) && !left.match(/[a-zA-Z]/))) {
+      log = {reason: 'ERROR: The multiplier must contain and contain only one integer'}
+    }
+  }
+  if (operator == '/') {
+    if (right.match(/[a-zA-Z]|(?<![1-9])[0]/)) {
+      log = {reason: 'ERROR: Divisor must be an integer and cannot be zero'}
+    }
+  }
+  if (operator == '+') {
+    if (!(right.match(/[a-zA-Z%]/) && left.match(/[a-zA-Z%]/))) {
+      log = {reason: 'ERROR: Addition cannot contain integers'}
+    }
+  }
+  if (operator == '-') {
+    if (!(right.match(/[a-zA-Z%]/) && left.match(/[a-zA-Z%]/))) {
+      log = {reason: 'ERROR: Subtraction cannot contain integers'}
+    }
+  }
+  return log
 }
 
 function getResult(left, right, operator) {
+  var value, log, errLog
   if (left.match(/var/)) {
     left = cssVarFun(left)
-    }
+  }
   if (right.match(/var/)) {
     right = cssVarFun(right)
-    }
+  }
+  errLog = checkComputation(left, right, operator)
+  if (errLog) {
+    return { value: null, log: errLog }
+  }
   var result, value, unit
   var leftValue = getValueUnit(left)
   var rightValue = getValueUnit(right)
   if (left.match(/\(/) | right.match(/\(/)) {
     result = left + ' ' + operator + ' ' + right
-    } else {
-        if (operator == '*') {
-          value = leftValue.value * rightValue.value
-          if (leftValue.unit == null) {
-              unit = rightValue.unit
-              } else { unit = leftValue.unit}
-          result = value + unit
-        } else if (operator == '/') {
-            if (rightValue != 0) {
-                value = leftValue.value / rightValue.value
-                unit = leftValue.unit
-                result = value + unit
-                }
-        } else if (operator == '+') {
-            if (JSON.stringify(leftValue.unit) == JSON.stringify(rightValue.unit)) {
-                value = parseInt(leftValue.value) + parseInt(rightValue.value)
-                unit = leftValue.unit
-                result = value + unit
-                } else result = '(' + left + ' ' + operator + ' ' + right + ')'
-        } else if (operator == '-') {
-            if (JSON.stringify(leftValue.unit) == JSON.stringify(rightValue.unit)) {
-                value = parseInt(leftValue.value) - parseInt(rightValue.value)
-                unit = leftValue.unit
-                result = value + unit
-                } else result = '(' + left + ' ' + operator + ' ' + right + ')'
-              }
+  } else {
+    if (operator == '*') {
+      value = leftValue.value * rightValue.value
+      if (leftValue.unit == null) {
+        unit = rightValue.unit
+      } else { unit = leftValue.unit}
+      result = value + unit
+    } else if (operator == '/') {
+      if (parseInt(rightValue.value) != 0) {
+        value = leftValue.value / rightValue.value
+        unit = leftValue.unit
+        result = value + unit
       }
-  return result
+    } else if (operator == '+') {
+      if (JSON.stringify(leftValue.unit) == JSON.stringify(rightValue.unit)) {
+        value = parseInt(leftValue.value) + parseInt(rightValue.value)
+        unit = leftValue.unit
+        result = value + unit
+      } else result = '(' + left + ' ' + operator + ' ' + right + ')'
+    } else if (operator == '-') {
+      if (JSON.stringify(leftValue.unit) == JSON.stringify(rightValue.unit)) {
+        value = parseInt(leftValue.value) - parseInt(rightValue.value)
+        unit = leftValue.unit
+        result = value + unit
+      } else result = '(' + left + ' ' + operator + ' ' + right + ')'
+    }
+  }
+  return { value: result, log: null }
 }
 
 function evalRpn(rpnQueue) {
   var outputStack = []
+  var value, res, log
   while(rpnQueue.length > 0) {
     var cur = rpnQueue.shift()
     if(!isOperator(cur)) {
       outputStack.push(cur)
     } else {
-        if(outputStack.length < 2) {
-          throw "unvalid stack length"
+      if(outputStack.length < 2) {
+      log = {reason: 'ERROR: Expression does not conform to specification'}
+      }
+      var sec = outputStack.pop()
+      var fir = outputStack.pop()
+      res = getResult(fir, sec, cur)
+      log = res.log
+      if (log) {
+        return {
+          value: null,
+          log: log
         }
-        var sec = outputStack.pop()
-        var fir = outputStack.pop()
-        var res = getResult(fir, sec, cur)
-        outputStack.push(res)
+      } else {
+        outputStack.push(res.value)
+      }
     }
   }
   if(outputStack.length != 1) {
-    throw "unvalid expression"
+    log = {reason: 'ERROR: Expression does not conform to specification'}
   } else {
     if (outputStack[0].match(/[+-]/)) {
-        return 'calc' + outputStack[0]
-        } else {
-            return outputStack[0]
-            }
+      value = 'calc' + outputStack[0]
+    } else {
+      value = outputStack[0]
+    }
+  }
+  return {
+    value: value,
+    log: log
   }
 }
 
@@ -3186,7 +3251,7 @@ var cssPropData = []
 function saveCssProp(name, value) {
   if (name.match(/\-\-/)) {
     while (value.match(/var/)) {
-        var value = cssVarFun(value)
+      var value = cssVarFun(value)
     }
     cssPropData.push({name: name,value: value})
   }
@@ -3196,29 +3261,56 @@ function cssVarFun(value) {
   if (value.match(/calc/)) {
     return value
   } else {
-      if (value.match(/var/)) {
-        if (value.match(/\,/)) {
-            var cssVarFir = value.substring(0,value.indexOf(",")).replace("var(","").trim()
-            var cssVarSec = value.substring(value.indexOf(",")+1,value.length).replace(")","").trim()
-        } else {
-              var cssVarFir = value.replace("var(","").replace(")","").trim()
-              var cssVarSec = ""
-        }
-        let varValue = cssVarSec
-        for(var i=0, len=cssPropData.length; i<len; i++) {
-          var cPDName = cssPropData[i].name.trim()
-          cssVarFir = util.hyphenedToCamelCase(cssVarFir)
-          if (cssVarFir == cPDName) {
-              varValue = cssPropData[i].value
-          }
-        }
-        return varValue
+    if (value.match(/var/)) {
+      if (value.match(/\,/)) {
+        var cssVarFir = value.substring(0,value.indexOf(",")).replace("var(","").trim()
+        var cssVarSec = value.substring(value.indexOf(",")+1,value.length).replace(")","").trim()
       } else {
-        return value
+          var cssVarFir = value.replace("var(","").replace(")","").trim()
+          var cssVarSec = ""
       }
+      let varValue = cssVarSec
+      for(var i=0, len=cssPropData.length; i<len; i++) {
+        var cPDName = cssPropData[i].name.trim()
+        cssVarFir = util.hyphenedToCamelCase(cssVarFir)
+        if (cssVarFir == cPDName) {
+          varValue = cssPropData[i].value
+        }
+      }
+      return varValue
+    } else {
+      return value
+    }
   }
 }
 
+function expValidate(name, value) {
+  var res, log
+  saveCssProp(name, value)
+  if (typeof value === 'string' && name != 'border') {
+    if (value.match(/var/)) {
+      value = cssVarFun(value)
+    }
+    if (value.match(/calc/)) {
+      var checkOp =
+        /[a-zA-Z0-9()]\+|\+[a-zA-Z0-9()]|[a-zA-Z0-9()](?<!\-)\-(?!\-)|(?<!\-)\-(?!\-)[a-zA-Z0-9()]|[a-zA-Z0-9()]\*|\*[a-zA-Z0-9()]|[a-zA-Z0-9()]\/|\/[a-zA-Z0-9()]/
+      if (value.match(checkOp) && value.match(/calc\(|var\(\-\-/)) {
+        log = {reason: 'ERROR: Expression error, A space is required before and after the operator'}
+        return {
+          log: log
+        }
+      }
+      res = dal2Rpn(value)
+      res = evalRpn(res.value)
+      log = res.log
+      value = res.value
+    }
+  }
+  return {
+    value: value,
+    log: log
+  }
+}
 
 /**
  * validate a CSS name/value pair
@@ -3230,19 +3322,19 @@ function cssVarFun(value) {
  * - log:{reason:string} or undefined
  */
 function validate(name, value) {
-  saveCssProp(name, value)
-  if (typeof value === 'string' && name != 'border') {
-    if (value.match(/var/)) {
-      value = cssVarFun(value)
+  var log, expRes
+  expRes = expValidate(name, value)
+  if (expRes.log) {
+    return {
+      value: null,
+      log: expRes.log
     }
-    if (value.match(/calc/)) {
-      value = evalRpn(dal2Rpn(value))
-    }
+  } else {
+    value = expRes.value
   }
 
-  var result, log
+  var result
   var validator = validatorMap[name]
-
   if (typeof validator === 'function') {
     const flag = /{{{(.+?)}}}|{{(.+?)}}/.test(value) && card
     if (typeof value !== 'function' &&  !flag) {
@@ -3271,8 +3363,6 @@ function validate(name, value) {
     log = {reason: 'WARNING: `' + util.camelCaseToHyphened(name) +
       '` is not a standard attribute name and may not be supported' + suggested}
   }
-
-
   return {
     value: result.value,
     log: log
@@ -3291,6 +3381,7 @@ module.exports = {
 
   LENGTH_VALIDATOR: LENGTH_VALIDATOR,
   COLOR_VALIDATOR: COLOR_VALIDATOR,
+  COLOR_VAR_VALIDATOR: COLOR_VAR_VALIDATOR,
   NUMBER_VALIDATOR: NUMBER_VALIDATOR,
   INTEGER_VALIDATOR: INTEGER_VALIDATOR,
   genEnumValidator: genEnumValidator,
