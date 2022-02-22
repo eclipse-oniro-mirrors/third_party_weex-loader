@@ -3231,15 +3231,16 @@ function cssVarFun(value) {
  */
 function validate(name, value) {
   saveCssProp(name, value)
-  var result, log
-    if (typeof value === 'string') {
-      if (value.match(/var/)) {
-          value = cssVarFun(value)
-        }
-      if (value.match(/calc/)) {
-          value = evalRpn(dal2Rpn(value))
-        }
+  if (typeof value === 'string' && name != 'border') {
+    if (value.match(/var/)) {
+      value = cssVarFun(value)
     }
+    if (value.match(/calc/)) {
+      value = evalRpn(dal2Rpn(value))
+    }
+  }
+
+  var result, log
   var validator = validatorMap[name]
 
   if (typeof validator === 'function') {
