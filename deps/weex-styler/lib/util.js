@@ -9,7 +9,7 @@ const { DEVICE_LEVEL } = require('../../lite/lite-enum')
  * @return {string}
  */
 exports.hyphenedToCamelCase = function hyphenedToCamelCase(value) {
-  return value.replace(/-([a-z])/g, function(s, m) {
+  return value.replace(/(?<!-)-([a-z])/g, function(s, m) {
     return m.toUpperCase()
   })
 }
@@ -45,7 +45,7 @@ exports.isValidValue = function isValidValue(value) {
  * @param  {obejct} spliceName
  */
 exports.splitAttr = function (object, value, spliceName) {
-  const values = value.toString().trim().split(/\s+/)
+  const values = value.toString().trim().split(/(?<!\+|\-|\*|\/|\,)\s+(?!\+|\-|\*|\/|\,)/)
   if (values) {
     switch (values.length) {
       case 1:
