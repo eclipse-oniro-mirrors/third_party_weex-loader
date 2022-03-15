@@ -365,18 +365,48 @@ function copyFile(inputFile, outputFile) {
     if (!(fs.existsSync(parent) && fs.statSync(parent).isDirectory())) {
       mkDir(parent);
     }
-    if (fs.existsSync(outputFile)) {
-      return;
+    if (path.parse(parent).name === 'i18n' && path.parse(inputFile).ext === '.json' &&
+      fs.existsSync(outputFile)) {
+        copyJsonFile(inputFile, outputFile);
+    } else if (!fs.existsSync(outputFile)){
+      const readStream = fs.createReadStream(inputFile);
+      const writeStream = fs.createWriteStream(outputFile);
+      readStream.pipe(writeStream);
+      readStream.on('close', function() {
+        writeStream.end();
+      });
     }
-    const readStream = fs.createReadStream(inputFile);
-    const writeStream = fs.createWriteStream(outputFile);
-    readStream.pipe(writeStream);
-    readStream.on('close', function() {
-      writeStream.end();
-    });
   } catch (err) {
     throw err;
   }
+}
+
+function copyJsonFile(inputFile, outputFile) {
+  try {
+    const contentInput = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
+    const contentOutput = JSON.parse(fs.readFileSync(outputFile, 'utf-8'));
+    Object.keys(contentInput).forEach(function (key) {
+      const contentElementMerge = mergeJson(contentInput[key], contentOutput[key]);
+      contentOutput[key] = contentElementMerge;
+    });
+    fs.writeFileSync(outputFile, JSON.stringify(contentOutput, null, '\t'));
+  } catch (err) {
+    throw err;
+  }
+}
+
+function mergeJson(inputValue, outputValue) {
+  if (outputValue === null || outputValue === undefined) {
+    return inputValue;
+  }
+  const typeInput = typeof inputValue;
+  if (typeInput === typeof outputValue && typeInput === 'object') {
+    Object.keys(inputValue).forEach(function (key) {
+      const contentElementMerge = mergeJson(inputValue[key], outputValue[key]);
+      outputValue[key] = contentElementMerge;
+    })
+  }
+  return outputValue;
 }
 
 export function mkDir(path_) {
