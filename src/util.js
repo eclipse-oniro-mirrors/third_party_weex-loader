@@ -62,27 +62,27 @@ export function logWarn (loader, logs) {
       logs.forEach(log => {
         if (log.reason.startsWith('NOTE') && parseInt(process.env.logLevel) <= 1) {
           if (log.line && log.column) {
-            loader.emitWarning('noteStartNOTE File：' + loader.resourcePath + ':' +
+            loader.emitWarning('noteStartNOTE File:' + loader.resourcePath + ':' +
               log.line + ':' + log.column + '\n ' + log.reason.replace('NOTE: ', '') + 'noteEnd')
           } else {
-            loader.emitWarning('noteStartNOTE File：' + loader.resourcePath +
+            loader.emitWarning('noteStartNOTE File:' + loader.resourcePath +
               '\n ' + log.reason.replace('NOTE: ', '') + 'noteEnd')
           }
         } else if (log.reason.startsWith('WARN') && parseInt(process.env.logLevel) <= 2) {
           if (log.line && log.column) {
-            loader.emitWarning('warnStartWARNING File：' + loader.resourcePath + ':' +
+            loader.emitWarning('warnStartWARNING File:' + loader.resourcePath + ':' +
               log.line + ':' + log.column + '\n ' + log.reason.replace('WARNING: ', '') + 'warnEnd')
           } else {
-            loader.emitWarning('warnStartWARNING File：' + loader.resourcePath +
+            loader.emitWarning('warnStartWARNING File:' + loader.resourcePath +
               '\n ' + log.reason.replace('WARNING: ', '') + 'warnEnd')
           }
         } else if (log.reason.startsWith('ERROR') && parseInt(process.env.logLevel) <= 3) {
           flag = true
           if (log.line && log.column) {
-            loader.emitError('errorStartERROR File：' + loader.resourcePath + ':' +
+            loader.emitError('errorStartERROR File:' + loader.resourcePath + ':' +
               log.line + ':' + log.column + '\n ' + log.reason.replace('ERROR: ', '') + 'errorEnd')
           } else {
-            loader.emitError('errorStartERROR File：' + loader.resourcePath +
+            loader.emitError('errorStartERROR File:' + loader.resourcePath +
               '\n ' + log.reason.replace('ERROR: ', '') + 'errorEnd')
           }
         }
