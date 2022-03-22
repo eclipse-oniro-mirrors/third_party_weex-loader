@@ -27,6 +27,7 @@ import {
 } from 'source-map'
 
 const { DEVICE_LEVEL } = require('./lite/lite-enum')
+export const useOSFiles = new Set();
 
 export function getNameByPath (resourcePath) {
   return path.basename(resourcePath).replace(/\..*$/, '')
@@ -270,7 +271,7 @@ function requireModule(moduleName) {
   return target;
 }
 `
-export function parseRequireModule (source) {
+export function parseRequireModule (source, resourcePath) {
   const requireMethod = process.env.DEVICE_LEVEL === DEVICE_LEVEL.LITE ? methodForLite : methodForOthers
   source = `${source}\n${requireMethod}`
   const requireReg = /require\(['"]([^()]+)['"]\)/g
@@ -287,6 +288,9 @@ export function parseRequireModule (source) {
   source = source.replace(requireReg, (item, item1) => {
     if (libReg.test(item1)) {
       item = `requireNapi("${item1.replace(libReg, '$1')}", true)`
+      if (resourcePath) {
+        useOSFiles.add(resourcePath);
+      }
     }
     return item
   })
