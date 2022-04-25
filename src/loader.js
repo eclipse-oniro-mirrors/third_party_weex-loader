@@ -194,6 +194,9 @@ function loader (source) {
 }
 
 function checkApp(_this) {
+  if (process.env.abilityType === 'testrunner') {
+    return true;
+  }
   return _this.resourcePath === path.resolve(process.env.projectPath,
     process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`)
 }
