@@ -545,17 +545,22 @@ function parseImport(resourcePath, rule, jsonStyle, log) {
     resourcePath = resourcePath.substring(0, resourcePath.lastIndexOf(path.sep) + 1);
     importPath = path.resolve(resourcePath, importPath)
   }
-  if (fs.existsSync(importPath)) {
-    source = fs.readFileSync(importPath).toString()
-    addPreviewCSS(importPath, resourcePath_)
-  } else {
-    log.push({
-      line: rule.position.start.line,
-      column: rule.position.start.column,
-      reason: 'ERROR: no such file or directory, open ' + importPath
-    })
-    return
+  if (!fs.existsSync(importPath)) {
+    const fileSearch = findFile(importPath);
+    if (fileSearch.result == true) {
+      importPath = fileSearch.filePath;
+    } else {
+      writeErrorOption();
+      log.push({
+        line: rule.position.start.line,
+        column: rule.position.start.column,
+        reason: 'ERROR: no such file or directory, open ' + importPath
+      });
+      return;
+    }
   }
+  source = fs.readFileSync(importPath).toString();
+  addPreviewCSS(importPath, resourcePath_);
   if (mediaString.length !== 0) {
     source = '@media ' + mediaString + '{\n' + source + '\n}'
   }
@@ -582,6 +587,45 @@ function addPreviewCSS(importPath, resourcePath) {
       content[importPath].push(...content[resourcePath]);
       content[importPath] = lodash.uniqWith(content[importPath], lodash.isEqual);
     }
+    fs.writeFileSync(process.env.watchCSSFiles, JSON.stringify(content, null, 2));
+  }
+}
+
+function findFile(importPath) {
+  const resultObject = {
+    result: false
+  };
+  if (!importPath || !process.env.resolveModules) {
+    return resultObject;
+  }
+  try {
+    const modules = JSON.parse(process.env.resolveModules);
+    modules.forEach(item => {
+      if (fs.existsSync(item)) {
+        if (fs.existsSync(path.join(item, importPath))) {
+          resultObject.result = true;
+          resultObject.filePath = path.join(item, importPath);
+          return resultObject;
+        }
+      } else {
+        const resolveItem = path.resolve(__dirname, item);
+        if (fs.existsSync(resolveItem)) {
+          resultObject.result = true;
+          resultObject.filePath = path.join(resolveItem, importPath);
+          return resultObject;
+        }
+      }
+    });
+  } catch (error) {
+    resultObject.result = false;
+  }
+  return resultObject;
+}
+
+function writeErrorOption() {
+  if (fs.existsSync(process.env.watchCSSFiles)) {
+    const content = JSON.parse(fs.readFileSync(process.env.watchCSSFiles));
+    content['clear'] = true;
     fs.writeFileSync(process.env.watchCSSFiles, JSON.stringify(content, null, 2));
   }
 }
