@@ -31,7 +31,8 @@ import {
   getRequireString,
   stringifyLoaders,
   logWarn,
-  loadBabelModule
+  loadBabelModule,
+  elements
 }
 from './util'
 import { isReservedTag } from './templater/component_validator'
@@ -180,6 +181,11 @@ function loader (source) {
   const isEntry = resourceQuery.entry
   const dirName = path.parse(this.resourcePath)
   const name = isEntry ? dirName.name : resourceQuery.name || getNameByPath(this.resourcePath)
+  const parentName = resourceQuery.parentName || name;
+  if (isEntry) {
+    elements[name] = elements[name] || {};
+    elements[name][name] = true;
+  }
   if (isReservedTag(name) && process.env.abilityType === 'page') {
     logWarn(this, [{
       reason: 'ERROR: The file name cannot contain reserved tag name: ' + name
@@ -189,7 +195,7 @@ function loader (source) {
   let output = ''
   //  import app.js
   output += loadApp(this, name, isEntry, customLang, source)
-  output += loadPage(this, name, isEntry, customLang, source)
+  output += loadPage(this, name, isEntry, customLang, source, parentName);
   return output
 }
 
@@ -262,7 +268,7 @@ function loadApp (_this, name, isEntry, customLang, source) {
   }
 }
 
-function loadPage (_this, name, isEntry, customLang, source) {
+function loadPage (_this, name, isEntry, customLang, source, parentName) {
   let output = ''
   if (path.extname(_this.resourcePath).match(/\.hml/)) {
     const filename = _this.resourcePath.replace(path.extname(_this.resourcePath).toString(), '')
@@ -272,7 +278,8 @@ function loadPage (_this, name, isEntry, customLang, source) {
     const frag = parseFragment(source)
     const elementNames = []
     const elementLength = frag.element.length
-    output += loadPageCheckElementLength(_this, elementLength, frag, elementNames, resourcePath, customLang)
+    output += loadPageCheckElementLength(_this, elementLength, frag, elementNames, resourcePath,
+      customLang, parentName);
 
     output += 'var $app_template$ = ' + getRequireString(_this, getLoaderString('template', {
       customLang,
@@ -299,7 +306,8 @@ function loadPage (_this, name, isEntry, customLang, source) {
   return output
 }
 
-function loadPageCheckElementLength (_this, elementLength, frag, elementNames, resourcePath, customLang) {
+function loadPageCheckElementLength (_this, elementLength, frag, elementNames, resourcePath,
+  customLang, parentName) {
   let output = ''
   if (elementLength) {
     for (let i = 0; i < elementLength; i++) {
@@ -319,6 +327,14 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
         }
         if (!element.name) {
           element.name = path.parse(src).name
+        }
+        elements[parentName] = elements[parentName] || {};
+        if (elements[parentName][element.name]) {
+          logWarn(_this, [{
+            reason: `ERROR: The element name ${element.name} can not be repeated.`
+          }]);
+        } else {
+          elements[parentName][element.name] = true;
         }
         checkEntry(_this, filePath, element.src)
       }
