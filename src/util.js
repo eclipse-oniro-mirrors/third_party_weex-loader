@@ -28,6 +28,7 @@ import {
 
 const { DEVICE_LEVEL } = require('./lite/lite-enum')
 export const useOSFiles = new Set();
+export const elements = {};
 
 export function getNameByPath (resourcePath) {
   return path.basename(resourcePath).replace(/\..*$/, '')
