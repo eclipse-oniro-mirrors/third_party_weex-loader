@@ -26,6 +26,7 @@ import {
   SourceMapConsumer
 } from 'source-map'
 
+const { systemModules } =  require('../main.product')
 const { DEVICE_LEVEL } = require('./lite/lite-enum')
 export const useOSFiles = new Set();
 
@@ -280,8 +281,11 @@ export function parseRequireModule (source, resourcePath) {
   let requireStatements = source.match(requireReg)
   if (requireStatements && requireStatements.length) {
     for (let requireStatement of requireStatements) {
-      if (requireStatement.match(REG_SYSTEM)) {
-        source = source.replace(requireStatement, requireStatement.replace('require', 'requireModule'))
+      const requireStatementExec = /\((\"|\')(.+)(\"|\')\)/.exec(requireStatement);
+      if (requireStatement.match(REG_SYSTEM) && requireStatementExec && requireStatementExec.length > 3) {
+        if (systemModules.length == 0 || systemModules.includes(requireStatementExec[2] + '.d.ts')) {
+          source = source.replace(requireStatement, requireStatement.replace('require', 'requireModule'));
+        }
       }
     }
   }
