@@ -328,6 +328,7 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
         if (!element.name) {
           element.name = path.parse(src).name
         }
+        element.name = element.name.toLowerCase();
         elements[parentName] = elements[parentName] || {};
         if (elements[parentName][element.name]) {
           logWarn(_this, [{
@@ -349,7 +350,7 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
         customLang,
         name: element.name,
         source: src
-      }), `${src}?name=${element.name.toLowerCase()}`)
+      }), `${src}?name=${element.name}`)
     }
   }
   return output
