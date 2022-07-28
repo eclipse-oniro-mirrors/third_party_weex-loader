@@ -332,7 +332,8 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
         elements[parentName] = elements[parentName] || {};
         if (elements[parentName][element.name]) {
           logWarn(_this, [{
-            reason: `ERROR: The element name ${element.name} can not be repeated.`
+            reason: `ERROR: The element name can not be same with the page ` +
+              `"${element.name}" (ignore case).`
           }]);
         } else {
           elements[parentName][element.name] = true;
