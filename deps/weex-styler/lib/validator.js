@@ -2826,6 +2826,7 @@ var LITE_PROP_NAME_GROUPS = {
     opacity: NUMBER_VALIDATOR,
     backgroundColor: COLOR_VAR_VALIDATOR,
     backgroundImage: URL_VALIDATOR,
+    placeholderColor: COLOR_VAR_VALIDATOR,
     display: genEnumValidator(['flex', 'none']),
   },
   text: {
