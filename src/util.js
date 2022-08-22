@@ -378,7 +378,7 @@ function copyFile(inputFile, outputFile) {
       fs.existsSync(outputFile)) {
         copyJsonFile(inputFile, outputFile);
     } else if (!fs.existsSync(outputFile)){
-      fs.writeFileSync(outputFile, fs.readFileSync(inputFile, 'utf-8'));
+      fs.writeFileSync(outputFile, fs.readFileSync(inputFile));
     }
   } catch (err) {
     throw err;
