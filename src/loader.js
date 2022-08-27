@@ -181,10 +181,17 @@ function loader (source) {
   const isEntry = resourceQuery.entry
   const dirName = path.parse(this.resourcePath)
   const name = isEntry ? dirName.name : resourceQuery.name || getNameByPath(this.resourcePath)
-  const parentName = resourceQuery.parentName || name;
+  let parentPath = resourceQuery.parentPath || this.resourcePath;
   if (isEntry) {
-    elements[name] = elements[name] || {};
-    elements[name][name] = true;
+    elements[this.resourcePath] = elements[this.resourcePath] || {};
+    elements[this.resourcePath][name] = true;
+  } else {
+    elements[this.resourcePath] = elements[this.resourcePath] || {};
+    elements[this.resourcePath]["parent"] = parentPath;
+    if (elements[parentPath] && elements[parentPath]["parent"]) {
+      elements[this.resourcePath]["parent"] = elements[elements[parentPath]["parent"]];
+      parentPath = elements[this.resourcePath]["parent"];
+    }
   }
   if (isReservedTag(name) && process.env.abilityType === 'page') {
     logWarn(this, [{
@@ -195,7 +202,7 @@ function loader (source) {
   let output = ''
   //  import app.js
   output += loadApp(this, name, isEntry, customLang, source)
-  output += loadPage(this, name, isEntry, customLang, source, parentName);
+  output += loadPage(this, name, isEntry, customLang, source, parentPath);
   return output
 }
 
@@ -268,7 +275,7 @@ function loadApp (_this, name, isEntry, customLang, source) {
   }
 }
 
-function loadPage (_this, name, isEntry, customLang, source, parentName) {
+function loadPage (_this, name, isEntry, customLang, source, parentPath) {
   let output = ''
   if (path.extname(_this.resourcePath).match(/\.hml/)) {
     const filename = _this.resourcePath.replace(path.extname(_this.resourcePath).toString(), '')
@@ -279,7 +286,7 @@ function loadPage (_this, name, isEntry, customLang, source, parentName) {
     const elementNames = []
     const elementLength = frag.element.length
     output += loadPageCheckElementLength(_this, elementLength, frag, elementNames, resourcePath,
-      customLang, parentName);
+      customLang, parentPath);
 
     output += 'var $app_template$ = ' + getRequireString(_this, getLoaderString('template', {
       customLang,
@@ -307,7 +314,7 @@ function loadPage (_this, name, isEntry, customLang, source, parentName) {
 }
 
 function loadPageCheckElementLength (_this, elementLength, frag, elementNames, resourcePath,
-  customLang, parentName) {
+  customLang, parentPath) {
   let output = ''
   if (elementLength) {
     for (let i = 0; i < elementLength; i++) {
@@ -329,14 +336,14 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
           element.name = path.parse(src).name
         }
         element.name = element.name.toLowerCase();
-        elements[parentName] = elements[parentName] || {};
-        if (elements[parentName][element.name]) {
+        elements[parentPath] = elements[parentPath] || {};
+        if (elements[parentPath][element.name]) {
           logWarn(_this, [{
             reason: `ERROR: The element name can not be same with the page ` +
               `"${element.name}" (ignore case).`
           }]);
         } else {
-          elements[parentName][element.name] = true;
+          elements[parentPath][element.name] = true;
         }
         checkEntry(_this, filePath, element.src)
       }
@@ -351,7 +358,7 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
         customLang,
         name: element.name,
         source: src
-      }), `${src}?name=${element.name}`)
+      }), `${src}?name=${element.name}&parentPath=${parentPath}`)
     }
   }
   return output
