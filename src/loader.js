@@ -128,13 +128,17 @@ function scriptLoaderString (loaders, config, customLoader) {
     loaders = loaders.concat(customLoader)
   }
   else {
+    const isTargets = {
+      presets: [loadBabelModule('@babel/preset-env')],
+      plugins: [loadBabelModule('@babel/plugin-transform-modules-commonjs')],
+      comments: 'false'
+    }
+    if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
+      isTargets['targets'] = 'node 14';
+    }
     loaders.push({
       name: defaultLoaders.babel,
-      query: {
-        presets: [loadBabelModule('@babel/preset-env')],
-        plugins: [loadBabelModule('@babel/plugin-transform-modules-commonjs')],
-        comments: 'false'
-      }
+      query: isTargets,
     })
     loaders.push({
       name: defaultLoaders.resourceReferenceScript
