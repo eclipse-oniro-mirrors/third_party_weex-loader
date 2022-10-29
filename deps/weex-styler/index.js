@@ -211,7 +211,7 @@ function parse(code, done, resourcePath) {
   var ast, err, jsonStyle = {}, log = []
 
   // css parse
-  ast = css.parse(code, {silent: true})
+  ast = css.parse(code, {silent: true, source: resourcePath});
 
   // catch syntax error
   if (ast.stylesheet.parsingErrors && ast.stylesheet.parsingErrors.length) {
