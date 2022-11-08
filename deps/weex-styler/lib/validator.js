@@ -713,6 +713,7 @@ var BORDER_VALIDATOR = function BORDER_VALIDATOR (value, name) {
       const item = values[i]
       if (rules[i].match(item)) {
           rules[i].action(item)
+          break;
         }
       // style width color pass verification, but did not write in order, such as "1px red solid", should be error
       let orderIndex = -1
