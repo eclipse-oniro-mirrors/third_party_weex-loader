@@ -587,6 +587,8 @@ function addPreviewCSS(importPath, resourcePath) {
       content[importPath].push(...content[resourcePath]);
       content[importPath] = lodash.uniqWith(content[importPath], lodash.isEqual);
     }
+    content["atime"] = content["atime"] || {};
+    content["atime"][importPath] = fs.statSync(importPath).atime.toString();
     fs.writeFileSync(process.env.watchCSSFiles, JSON.stringify(content, null, 2));
   }
 }
