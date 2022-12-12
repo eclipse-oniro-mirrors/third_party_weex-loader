@@ -633,8 +633,14 @@ var SHORTHAND_VALIDATOR = function SHORTHAND_VALIDATOR(v, validateFunction, isAr
 }
 
 var BORDER_VALIDATOR = function BORDER_VALIDATOR (value, name) {
-  value = (value || '').toString().trim()
-  const values = value.split(/\s+/)
+  value = (value || '').toString().trim();
+  let values = '';
+  const colorAttribute = value.match(/\(.*?\)/g);
+  if (colorAttribute && colorAttribute.length === 1) {
+    values = value.replace(colorAttribute[0], colorAttribute[0].replace(/\s+/g, '')).split(/\s+/);
+  } else {
+    values = value.split(/\s+/);
+  }
   const res = []
   let hasError = false
   const reasons = []
