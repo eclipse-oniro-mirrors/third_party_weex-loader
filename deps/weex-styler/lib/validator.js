@@ -2417,7 +2417,8 @@ var RICH_PROP_NAME_GROUPS = {
     stroke: COLOR_VAR_VALIDATOR,
     strokeOpacity: NUMBER_VALIDATOR,
     strokeWidth: LENGTH_VALIDATOR,
-    fontFeatureSettings: ANYTHING_VALIDATOR
+    fontFeatureSettings: ANYTHING_VALIDATOR,
+    textDecorationColor: COLOR_VAR_VALIDATOR
   },
   calendar: {
     boundaryColOffset: LENGTH_VALIDATOR,
