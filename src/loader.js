@@ -129,7 +129,7 @@ function scriptLoaderString (loaders, config, customLoader) {
   }
   else {
     const isTargets = {
-      'extends': path.join(__dirname, "../babel.config.js")
+      'extends': path.resolve(__dirname, "../babel.config.js")
     }
     if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
       isTargets['targets'] = 'node 8';
