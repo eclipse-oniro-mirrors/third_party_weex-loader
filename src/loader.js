@@ -129,9 +129,7 @@ function scriptLoaderString (loaders, config, customLoader) {
   }
   else {
     const isTargets = {
-      presets: [loadBabelModule('@babel/preset-env')],
-      plugins: [loadBabelModule('@babel/plugin-transform-modules-commonjs')],
-      comments: 'false'
+      'extends': path.resolve(__dirname, "../babel.config.js")
     }
     if (process.env.DEVICE_LEVEL === DEVICE_LEVEL.RICH) {
       isTargets['targets'] = 'node 8';
