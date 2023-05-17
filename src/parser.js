@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import parse5 from 'parse5'
+import * as parse5 from 'parse5'
 import templater from './templater'
 import styler from './styler'
 import scripter from './scripter'
