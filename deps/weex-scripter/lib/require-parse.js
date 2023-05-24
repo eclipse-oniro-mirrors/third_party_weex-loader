@@ -1,6 +1,6 @@
 var path = require('path')
 var fs = require('fs')
-var md5 = require('md5')
+const crypto = require("crypto")
 var existsSync = fs.existsSync || path.existsSync
 
 var nodePaths = process.env.NODE_PATH ? process.env.NODE_PATH.split(':') : []
@@ -83,7 +83,9 @@ function parseAndReplaceRequire(code, curPath) {
       return $0
     }
     else {
-      var md5Path = md5(subModulePath)
+      const hash = crypto.createHash('sha256')
+      hash.update(subModulePath.toString())
+      var md5Path = hash.digest('hex')
       requires[md5Path] = subModulePath
       return 'browserifyRequire("' + md5Path +  '")'
     }
