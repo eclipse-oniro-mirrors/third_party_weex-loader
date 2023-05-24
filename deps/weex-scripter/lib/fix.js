@@ -1,6 +1,3 @@
-var esprima = require('esprima')
-var escodegen = require('escodegen')
-
 // code sample of hacking old script
 ;({
   "type": "Program",
@@ -151,22 +148,11 @@ function convertValueAst(value) {
   }
   return data
 }
-
 function format(code, needCodegen) {
-  var ast = esprima.parse(code)
-  var prop = findDataValue(ast)
-
-  if (prop) {
-    prop.value = convertValueAst(prop.value)
-    needCodegen = true
-  }
-
-  return needCodegen ? escodegen.generate(ast) : code
+  return code
 }
 
 function formatBetter(code) {
-  esprima.parse(code, {range: true})
-
   return code
 }
 
