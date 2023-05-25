@@ -20,7 +20,7 @@
 import path from 'path'
 import fs from 'fs'
 import loaderUtils from 'loader-utils'
-import hash from 'hash-sum'
+const crypto = require("crypto")
 import {
   SourceMapGenerator,
   SourceMapConsumer
@@ -37,7 +37,9 @@ export function getNameByPath (resourcePath) {
 
 export function getFileNameWithHash (resourcePath, content) {
   const filename = path.relative('.', resourcePath)
-  const cacheKey = hash(filename + content)
+  const hash = crypto.createHash('sha256')
+  hash.update((filename + content).toString())
+  const cacheKey = hash.digest('hex')
   return `./${filename}?${cacheKey}`
 }
 
