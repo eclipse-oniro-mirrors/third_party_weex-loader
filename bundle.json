@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/weex_loader",
+    "name": "@ohos/weex-loader",
     "description": "a webpack loader for weex.",
     "version": "3.1",
     "license": "Apache V2",
@@ -10,11 +10,13 @@
     "dirs": {},
     "scripts": {},
     "component": {
-        "name": "thirdparty_weex_loader",
-        "subsystem": "developtools",
+        "name": "weex-loader",
+        "subsystem": "thirdparty",
         "syscap": [],
         "features": [],
-        "adapted_system_type": [],
+        "adapted_system_type": [
+            "standard"
+        ],
         "rom": "",
         "ram": "",
         "deps": {
