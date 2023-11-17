@@ -81,6 +81,7 @@ ohos_copy("weex_loader_ark_hap") {
   deps = [
     ":build_weex_loader_library",
     ":weex_loader",
+    "//developtools/ace_js2bundle:ace_loader_ark_hap",
   ]
   sources = weex_loader_files_set
   outputs = [ ace_loader_ark_dir + "/lib/{{source_file_part}}" ]
