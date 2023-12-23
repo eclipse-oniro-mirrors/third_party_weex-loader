@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument("--weex-loader-src-dir",
                         help='path to weex-loader/src')
     parser.add_argument('--babel-config-js', help='path babel.config.js')
+    parser.add_argument('--module-source-js', help='path module-source.js')
     parser.add_argument('--uglify-source-js', help='path uglify-source.js')
     parser.add_argument('--output-dir', help='path to output')
 
@@ -48,8 +49,8 @@ def parse_args():
     return options
 
 
-def do_build(build_cmd, uglify_cmd):
-    for cmd in [build_cmd, uglify_cmd]:
+def do_build(build_cmd, copy_cmd, uglify_cmd):
+    for cmd in [build_cmd, copy_cmd, uglify_cmd]:
         build_utils.check_output(cmd)
 
 
@@ -63,11 +64,14 @@ def main():
     depfile_deps = [options.node, options.babel_js, options.babel_config_js]
     depfile_deps.extend(build_utils.get_all_files(options.weex_loader_src_dir))
 
+    copy_cmd = [options.node, options.module_source_js, options.output_dir]
+    depfile_deps.append(options.module_source_js)
+
     uglify_cmd = [options.node, options.uglify_source_js, options.output_dir]
     depfile_deps.append(options.uglify_source_js)
 
     build_utils.call_and_write_depfile_if_stale(
-        lambda: do_build(build_cmd, uglify_cmd),
+        lambda: do_build(build_cmd, copy_cmd, uglify_cmd),
         options,
         depfile_deps=depfile_deps,
         input_paths=depfile_deps,
