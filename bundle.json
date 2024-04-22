@@ -25,11 +25,7 @@
         },
         "build": {
             "sub_component": [],
-            "inner_kits": [
-                {
-                    "name": "//third_party/weex-loader:weex_loader_ark_hap"
-                }
-            ],
+            "inner_kits": [],
             "test": []
         }
     }
