@@ -31,7 +31,7 @@ module.exports = function(api) {
         '@babel/plugin-transform-arrow-functions',
         {spec: true},
       ]
-    ]
+    ];
     plugins.push(...liteArray);
   }
   return {
@@ -40,4 +40,3 @@ module.exports = function(api) {
     comments: false
   };
 };
-
