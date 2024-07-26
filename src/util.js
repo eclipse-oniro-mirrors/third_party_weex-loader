@@ -286,7 +286,7 @@ export function parseRequireModule (source, resourcePath) {
     for (let requireStatement of requireStatements) {
       const requireStatementExec = /\((\"|\')(.+)(\"|\')\)/.exec(requireStatement);
       if (requireStatement.match(REG_SYSTEM) && requireStatementExec && requireStatementExec.length > 3) {
-        if (systemModules.length == 0 || systemModules.includes(requireStatementExec[2] + '.d.ts') ||
+        if (systemModules.length === 0 || systemModules.includes(requireStatementExec[2] + '.d.ts') ||
           process.env.DEVICE_LEVEL === 'lite') {
           source = source.replace(requireStatement, requireStatement.replace('require', 'requireModule'));
         }
