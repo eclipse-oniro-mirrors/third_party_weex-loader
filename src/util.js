@@ -21,6 +21,7 @@ import path from 'path'
 import fs from 'fs'
 import loaderUtils from 'loader-utils'
 const crypto = require("crypto")
+const JSON5 = require('json5');
 import {
   SourceMapGenerator,
   SourceMapConsumer
@@ -285,6 +286,7 @@ export function parseRequireModule (source, resourcePath) {
   if (requireStatements && requireStatements.length) {
     for (let requireStatement of requireStatements) {
       const requireStatementExec = /\((\"|\')(.+)(\"|\')\)/.exec(requireStatement);
+      checkModuleIsVaild(requireStatementExec, resourcePath);
       if (requireStatement.match(REG_SYSTEM) && requireStatementExec && requireStatementExec.length > 3) {
         if (systemModules.length === 0 || systemModules.includes(requireStatementExec[2] + '.d.ts') ||
           process.env.DEVICE_LEVEL === 'lite') {
@@ -385,6 +387,48 @@ function copyFile(inputFile, outputFile) {
     }
   } catch (err) {
     throw err;
+  }
+}
+
+function isPathUnderBase(fullPath, basePath) {
+  const normalizedFullPath = fullPath.replace(/\\/g, '/').toLowerCase();
+  const normalizedBasePath = basePath.replace(/\\/g, '/').toLowerCase() + '/';
+
+  return normalizedFullPath.startsWith(normalizedBasePath);
+}
+
+function checkModuleIsVaild(requireStatementExec, resourcePath) {
+  if (process.env.DEVICE_LEVEL  !== 'lite' || !requireStatementExec || requireStatementExec.length <= 3) {
+    return;
+  }
+
+  const appJSPath = path.dirname(path.resolve(process.env.projectPath, 'app.js'));
+  if (!isPathUnderBase(resourcePath, appJSPath)) {
+    return;
+  }
+
+  const json5Path = path.join(process.env.projectPath, '../../../../', 'oh-package.json5');
+  const dependencies = [];
+  if (fs.existsSync(json5Path)) {
+    const json5Content = fs.readFileSync(json5Path, 'utf8');
+    const content = JSON5.parse(json5Content);
+    if (content['dependencies']) {
+      Object.keys(content['dependencies']).forEach(element =>{
+        dependencies.push(element);
+      })
+    }
+  }
+
+  if (dependencies.length === 0) {
+    return;
+  }
+
+  const moduleName = requireStatementExec[2];
+  if (moduleName.includes('../')) {
+    return;
+  }
+  if (!dependencies.includes(moduleName)) {
+    throw new Error(`Cannot find module ${moduleName} or its corresponding type declarations.`);
   }
 }
 
