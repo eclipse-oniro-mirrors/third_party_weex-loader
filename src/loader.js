@@ -51,6 +51,18 @@ const defaultLoaders = {
   resourceReferenceScript: path.resolve(loaderPath, 'resource-reference-script.js')
 }
 
+/**
+ * Central loader configuration factory that returns the appropriate loader string
+ * based on file type and configuration. Acts as a dispatcher for specialized loader strings.
+ * 
+ * @param {string} type - The type of loader needed (main/element/template/style/script/config/data)
+ * @param {Object} config - Configuration options for the loader including:
+ *                - lang: Language specification
+ *                - customLang: Custom language loaders
+ *                - source: Source file path
+ *                - app: Boolean flag for application scripts
+ * @returns {string} Webpack-compatible loader string
+ */
 function getLoaderString (type, config) {
   config = config || {}
   const customLoader = loadCustomLoader(config)
@@ -73,12 +85,28 @@ function getLoaderString (type, config) {
   }
 }
 
+/**
+ * Loads a custom language loader based on configuration
+ * Primarily used for loading Babel-compatible language processors (like TypeScript, Flow, etc.)
+ * 
+ * @param {Object} config - Configuration object containing:
+ *                - lang: The language to load (e.g., 'typescript', 'flow')
+ *                - customLang: Map of available custom languages and their loaders
+ * @returns {Function|undefined} The loaded custom loader function, or undefined if not found
+ */
 function loadCustomLoader (config) {
   if (config.lang && config.customLang[config.lang]) {
     return loadBabelModule(config.customLang[config.lang][0])
   }
 }
 
+/**
+ * Generates a webpack loader string using the default main loader
+ * Provides a clean way to get the standard main loader configuration
+ * 
+ * @param {Array} loaders - Initial loader array (will be overridden)
+ * @returns {string} Webpack-compatible loader string with just the main loader
+ */
 function mainLoaderString (loaders) {
   loaders = [{
     name: defaultLoaders.main
@@ -86,6 +114,15 @@ function mainLoaderString (loaders) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Generates a webpack loader string for processing custom elements/components
+ * Configures the main loader with element-specific options
+ * 
+ * @param {Array} loaders - Initial loader array (will be overridden)
+ * @param {Object} config - Configuration options including:
+ *                - source: Source file path (optional)
+ * @returns {string} Webpack-compatible loader string
+ */
 function elementLoaderString (loaders, config) {
   loaders = [{
     name: defaultLoaders.main,
@@ -96,6 +133,15 @@ function elementLoaderString (loaders, config) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Generates a webpack loader string for processing template files
+ * Combines default JSON parsing with template processing, plus optional custom loaders
+ * 
+ * @param {Array} loaders - Initial loader array (will be overridden)
+ * @param {Object} config - Configuration options (currently unused)
+ * @param {Array} customLoader - Optional custom loaders to append
+ * @returns {string} Webpack-compatible loader string
+ */
 function templateLoaderString (loaders, config, customLoader) {
   loaders = [{
     name: defaultLoaders.json
@@ -108,6 +154,15 @@ function templateLoaderString (loaders, config, customLoader) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Generates a webpack loader string for processing style files (CSS/LESS/SASS/etc)
+ * Combines default JSON and style loaders with optional custom loaders
+ * 
+ * @param {Array} loaders - Initial loader configuration (will be overridden)
+ * @param {Object} config - Configuration options (unused in current implementation)
+ * @param {Array} customLoader - Optional array of custom loaders to append
+ * @returns {string} Webpack-compatible loader string
+ */
 function styleLoaderString (loaders, config, customLoader) {
   loaders = [{
     name: defaultLoaders.json
@@ -120,6 +175,17 @@ function styleLoaderString (loaders, config, customLoader) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Generates a webpack loader string for JavaScript/script files with configurable options
+ * Supports custom loaders, Babel transpilation, and manifest processing for apps
+ * 
+ * @param {Array} loaders - Initial loader configuration (will be overridden)
+ * @param {Object} config - Configuration options including:
+ *                - app: boolean indicating if processing app script
+ *                - source: source file path
+ * @param {Array} customLoader - Optional custom loaders to include
+ * @returns {string} Webpack-compatible loader string
+ */
 function scriptLoaderString (loaders, config, customLoader) {
   loaders = [{
     name: defaultLoaders.script
@@ -154,6 +220,14 @@ function scriptLoaderString (loaders, config, customLoader) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Generates a webpack loader string specifically for configuration files (e.g., JSON configs)
+ * Defaults to using the standard JSON loader regardless of input
+ * 
+ * @param {Array} loaders - Original loader array (gets overridden)
+ * @param {Object} config - Additional configuration options (currently unused)
+ * @returns {string} Webpack-compatible loader string
+ */
 function configLoaderString (loaders, config) {
   loaders = [{
     name: defaultLoaders.json
@@ -161,6 +235,14 @@ function configLoaderString (loaders, config) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Generates a loader string for processing data files (e.g., JSON)
+ * Uses default JSON loader configuration and stringifies the loader chain
+ * 
+ * @param {Array} loaders - Original loader configuration (overridden in this function)
+ * @param {Object} config - Additional configuration object (unused in current implementation)
+ * @returns {string} Stringified loader configuration
+ */
 function dataLoaderString (loaders, config) {
   loaders = [{
     name: defaultLoaders.json
@@ -168,6 +250,13 @@ function dataLoaderString (loaders, config) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Webpack loader function that processes application and page components
+ * Handles both entry files and child components with proper dependency tracking
+ * 
+ * @param {string} source - The source code of the file being processed
+ * @returns {string} The processed output code
+ */
 function loader (source) {
   this.cacheable && this.cacheable()
 
@@ -208,6 +297,12 @@ function loader (source) {
   return output
 }
 
+/**
+ * Determines if the current resource is the main application file
+ * 
+ * @param {Object} _this - Webpack loader context
+ * @returns {boolean} True if the file is the main application file, false otherwise
+ */
 function checkApp(_this) {
   if (process.env.abilityType === 'testrunner') {
     return true;
@@ -216,6 +311,17 @@ function checkApp(_this) {
     process.env.abilityType === 'page' ? 'app.js' : `${process.env.abilityType}.js`)
 }
 
+/**
+ * Loads and processes an application entry file (app.js)
+ * Handles both Rich and Lite device levels, including CSS and script loading
+ * 
+ * @param {Object} _this - Webpack loader context
+ * @param {string} name - Application name
+ * @param {boolean} isEntry - Whether this is an entry point
+ * @param {string} customLang - Custom language setting
+ * @param {string} source - Source content of the file
+ * @returns {string} Generated output code for the application
+ */
 function loadApp (_this, name, isEntry, customLang, source) {
   let output = ''
   let extcss = false
@@ -277,6 +383,19 @@ function loadApp (_this, name, isEntry, customLang, source) {
   }
 }
 
+/**
+ * Main function for loading and processing a page/component
+ * Coordinates the loading of all associated resources (template, CSS, JS)
+ * and generates the final output code for either Rich or Lite device level
+ * 
+ * @param {Object} _this - Webpack loader context
+ * @param {string} name - Name of the component/page
+ * @param {boolean} isEntry - Whether this is an entry point
+ * @param {string} customLang - Custom language setting
+ * @param {string} source - Source content of the file
+ * @param {string} parentPath - Path of the parent component
+ * @returns {string} Generated output code for the component
+ */
 function loadPage (_this, name, isEntry, customLang, source, parentPath) {
   let output = ''
   if (path.extname(_this.resourcePath).match(/\.hml/)) {
@@ -315,6 +434,19 @@ function loadPage (_this, name, isEntry, customLang, source, parentPath) {
   return output
 }
 
+/**
+ * Processes custom elements in a template and generates corresponding require statements
+ * Validates element configurations and checks for naming conflicts
+ * 
+ * @param {Object} _this - Webpack compilation context
+ * @param {number} elementLength - Number of custom elements to process
+ * @param {Object} frag - Fragment containing element definitions
+ * @param {Array} elementNames - Array to collect processed element names
+ * @param {string} resourcePath - Path of the parent resource
+ * @param {string} customLang - Custom language setting for loaders
+ * @param {string} parentPath - Path of the parent component
+ * @returns {string} Generated require statements for all valid elements
+ */
 function loadPageCheckElementLength (_this, elementLength, frag, elementNames, resourcePath,
   customLang, parentPath) {
   let output = ''
@@ -366,6 +498,18 @@ function loadPageCheckElementLength (_this, elementLength, frag, elementNames, r
   return output
 }
 
+/**
+ * Checks for and loads CSS or preprocessor style files associated with a component/page
+ * Supports CSS, LESS, SCSS, and SASS file formats
+ * Generates the require statement for the style file if found
+ * 
+ * @param {Object} _this - Webpack compilation context
+ * @param {string} filename - Base filename (without extension)
+ * @param {string} customLang - Custom language setting for the loader
+ * @returns {Object} Returns an object containing:
+ *   - extcss: boolean indicating if any style file exists
+ *   - output: generated require statement or empty string
+ */
 function loadPageFindCss (_this, filename, customLang) {
   let output = ''
   let extcss = false
@@ -431,6 +575,17 @@ function loadPageFindCss (_this, filename, customLang) {
   }
 }
 
+/**
+ * Checks for and loads a JavaScript file associated with a component/page
+ * Generates the require statement for the JS file if it exists
+ * 
+ * @param {Object} _this - Webpack compilation context
+ * @param {string} filename - Base filename (without extension) 
+ * @param {string} customLang - Custom language setting for the loader
+ * @returns {Object} Returns an object containing:
+ *   - extscript: boolean indicating if JS file exists
+ *   - output: generated require statement or empty string
+ */
 function loadPageFindJs (_this, filename, customLang) {
   let output = ''
   let extscript = false
@@ -455,6 +610,16 @@ function loadPageFindJs (_this, filename, customLang) {
   }
 }
 
+/**
+ * Generates component initialization code for Rich mode
+ * Creates a component definition with optional script and style, and handles entry point bootstrapping
+ * 
+ * @param {string} name - Component name
+ * @param {boolean} extscript - Whether the component has an external script
+ * @param {boolean} extcss - Whether the component has external CSS 
+ * @param {boolean} isEntry - Whether this is an entry component
+ * @returns {string} Generated component definition and bootstrap code
+ */
 function loadPageCheckRich (name, extscript, extcss, isEntry) {
   let output = ''
   output += `
@@ -477,6 +642,14 @@ $app_module$.exports.style = $app_style$
   return output
 }
 
+/**
+ * Generates the page initialization code for Lite mode
+ * Combines script, style, and template components into a ViewModel instance
+ * 
+ * @param {boolean} extscript - Whether external script exists
+ * @param {boolean} extcss - Whether external CSS exists
+ * @returns {string} Generated initialization code
+ */
 function loadPageCheckLite (extscript, extcss) {
   return (extscript ? `var options=$app_script$\n if ($app_script$.__esModule) {\n
       options = $app_script$.default;\n }\n` : `var options={}\n`) +
@@ -488,6 +661,13 @@ for (const key in legacy) {
   loader[key] = legacy[key]
 }
 
+/**
+ * Checks if the given file path is an entry file and issues a warning if true
+ * 
+ * @param {Object} _this - Webpack compilation context object containing build information
+ * @param {string} filePath - Absolute file path to check
+ * @param {string} elementSrc - Page path from config file, used for warning message
+ */
 function checkEntry(_this, filePath, elementSrc) {
   if (_this._compilation.entries) {
     for (var key of _this._compilation.entries.keys()) {
