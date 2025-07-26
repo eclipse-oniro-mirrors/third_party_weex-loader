@@ -412,10 +412,10 @@ function checkModuleIsVaild(requireStatementExec, resourcePath) {
   if (fs.existsSync(json5Path)) {
     const json5Content = fs.readFileSync(json5Path, 'utf8');
     const content = JSON5.parse(json5Content);
-    if (content['dependencies']) {
-      Object.keys(content['dependencies']).forEach(element =>{
+    if (content.dependencies) {
+      Object.keys(content.dependencies).forEach(element =>{
         dependencies.push(element);
-      })
+      });
     }
   }
 
