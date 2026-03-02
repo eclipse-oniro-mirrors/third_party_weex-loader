@@ -32,10 +32,22 @@ const { DEVICE_LEVEL } = require('./lite/lite-enum')
 export const useOSFiles = new Set();
 export const elements = {};
 
+/**
+ * Get name by path (basename without extension)
+ * @param {string} resourcePath
+ * @returns {string}
+ */
 export function getNameByPath (resourcePath) {
   return path.basename(resourcePath).replace(/\..*$/, '')
 }
 
+/**
+ * Generate a file name with a hash to cache-bust
+ * Uses sha256 over the relative path and content
+ * @param {string} resourcePath
+ * @param {any} content
+ * @returns {string} hashed file name reference
+ */
 export function getFileNameWithHash (resourcePath, content) {
   const filename = path.relative('.', resourcePath)
   const hash = crypto.createHash('sha256')
@@ -44,6 +56,11 @@ export function getFileNameWithHash (resourcePath, content) {
   return `./${filename}?${cacheKey}`
 }
 
+/**
+ * Get relative filename from a path
+ * @param {string} filepath
+ * @returns {string}
+ */
 export function getFilenameByPath (filepath) {
   return path.relative('.', filepath)
 }
@@ -53,6 +70,13 @@ export const FUNC_START_REG = new RegExp('["\']' + FUNC_START, 'g')
 export const FUNC_END = '#####FUN_E#####'
 export const FUNC_END_REG = new RegExp(FUNC_END + '["\']', 'g')
 
+/**
+ * Custom replacer for JSON.stringify to serialize functions
+ * Functions are wrapped with unique markers for later restoration
+ * @param {string} key
+ * @param {*} value
+ * @returns {*}
+ */
 export function stringifyFunction (key, value) {
   if (typeof value === 'function') {
     return FUNC_START + value.toString() + FUNC_END
@@ -60,6 +84,12 @@ export function stringifyFunction (key, value) {
   return value
 }
 
+/**
+ * Emit warnings and errors to webpack loader based on logs
+ * @param {Object} loader
+ * @param {Array} logs
+ * @returns {boolean} whether an error was encountered
+ */
 export function logWarn (loader, logs) {
   // add flag to determine if there is an error log
   let flag = false
@@ -98,6 +128,13 @@ export function logWarn (loader, logs) {
   return flag
 }
 
+/**
+ * Build a require string for a given filepath with optional loader
+ * @param {Object} loaderContext
+ * @param {string} loader
+ * @param {string} filepath
+ * @returns {string}
+ */
 export function getRequireString (loaderContext, loader, filepath) {
   return 'require(' +
                 loaderUtils.stringifyRequest(
@@ -109,6 +146,11 @@ export function getRequireString (loaderContext, loader, filepath) {
            ')\n'
 }
 
+/**
+ * Convert an array of loader specs to a string representation
+ * @param {Array} loaders
+ * @returns {string}
+ */
 export function stringifyLoaders (loaders) {
   return loaders.map(loader => {
     if (typeof loader === 'string') {
@@ -138,6 +180,13 @@ export function stringifyLoaders (loaders) {
   }).join('!')
 }
 
+/**
+ * Create a SourceMapGenerator for given source and mappings
+ * @param {Object} loader
+ * @param {string} source
+ * @param {Iterable} iterator
+ * @returns {SourceMapGenerator}
+ */
 export function generateMap (loader, source, iterator) {
   const filePath = loader.resourcePath
 
@@ -161,6 +210,13 @@ export function generateMap (loader, source, iterator) {
   return map
 }
 
+/**
+ * Consume and map a generated source map to original positions
+ * @param {Object} loader
+ * @param {string} target
+ * @param {Object} map
+ * @returns {Object}
+ */
 export function consumeMap (loader, target, map) {
   const smc = new SourceMapConsumer(map)
   let source
@@ -205,10 +261,19 @@ export function consumeMap (loader, target, map) {
 }
 
 const LINE_REG = /\r?\n/g
+/**
+ * Split source into lines (preserving newline handling)
+ * @param {string} source
+ * @returns {Array<string>}
+ */
 export function splitSourceLine (source) {
   return source.split(LINE_REG)
 }
 
+/**
+ * Print source with line numbers to console (debug helper)
+ * @param {string} source
+ */
 export function printSourceWithLine (source) {
   console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
   source = splitSourceLine(source)
@@ -218,6 +283,11 @@ export function printSourceWithLine (source) {
   console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
 }
 
+/**
+ * Resolve a babel module path or fall back to module name
+ * @param {string} moduleName
+ * @returns {string}
+ */
 export function loadBabelModule (moduleName) {
   try {
     const filePath = require.resolve(moduleName)
@@ -276,12 +346,18 @@ function requireModule(moduleName) {
   return target;
 }
 `
+/**
+ * Parse and rewrite require statements for module resolution
+ * @param {string} source
+ * @param {string} resourcePath
+ * @returns {string}
+ */
 export function parseRequireModule (source, resourcePath) {
   const requireMethod = process.env.DEVICE_LEVEL === DEVICE_LEVEL.LITE ? methodForLite : methodForOthers
   source = `${source}\n${requireMethod}`
   const requireReg = /require\(['"]([^()]+)['"]\)/g
   const libReg = /^lib(.+)\.so$/
-  const REG_SYSTEM = /@(system|ohos)\.(\S+)/g;
+  const REG_SYSTEM = /@(system|ohos|hms)\.(\S+)/g;
   let requireStatements = source.match(requireReg)
   if (requireStatements && requireStatements.length) {
     for (let requireStatement of requireStatements) {
@@ -307,6 +383,14 @@ export function parseRequireModule (source, resourcePath) {
   return source
 }
 
+/**
+ * Build loader string for json/template/style files
+ * @param {string} type
+ * @param {string} customLoader
+ * @param {boolean} isVisual
+ * @param {any} queryType
+ * @returns {string}
+ */
 export function jsonLoaders (type, customLoader, isVisual, queryType) {
   let loaders = []
 
@@ -352,6 +436,11 @@ export function jsonLoaders (type, customLoader, isVisual, queryType) {
   return stringifyLoaders(loaders)
 }
 
+/**
+ * Recursively copy directory contents from inputPath to outputPath
+ * @param {string} inputPath
+ * @param {string} outputPath
+ */
 export function circularFile(inputPath, outputPath) {
   if ((!inputPath) || (!outputPath)) {
     return;
@@ -373,6 +462,11 @@ export function circularFile(inputPath, outputPath) {
   })
 }
 
+/**
+ * Copy a single file, creating parent directories if needed
+ * @param {string} inputFile
+ * @param {string} outputFile
+ */
 function copyFile(inputFile, outputFile) {
   try {
     const parent = path.join(outputFile, '..');
@@ -390,6 +484,12 @@ function copyFile(inputFile, outputFile) {
   }
 }
 
+/**
+ * Check if fullPath is under basePath (case-insensitive, normalized)
+ * @param {string} fullPath
+ * @param {string} basePath
+ * @returns {boolean}
+ */
 function isPathUnderBase(fullPath, basePath) {
   const normalizedFullPath = fullPath.replace(/\\/g, '/').toLowerCase();
   const normalizedBasePath = basePath.replace(/\\/g, '/').toLowerCase() + '/';
@@ -397,6 +497,11 @@ function isPathUnderBase(fullPath, basePath) {
   return normalizedFullPath.startsWith(normalizedBasePath);
 }
 
+/**
+ * Validate required module for lite/device level
+ * @param {Array|undefined} requireStatementExec
+ * @param {string} resourcePath
+ */
 function checkModuleIsVaild(requireStatementExec, resourcePath) {
   if (process.env.DEVICE_LEVEL  !== 'lite' || !requireStatementExec || requireStatementExec.length <= 3) {
     return;
@@ -432,6 +537,11 @@ function checkModuleIsVaild(requireStatementExec, resourcePath) {
   }
 }
 
+/**
+ * Copy and merge JSON files, preserving existing keys
+ * @param {string} inputFile
+ * @param {string} outputFile
+ */
 function copyJsonFile(inputFile, outputFile) {
   try {
     const contentInput = JSON.parse(fs.readFileSync(inputFile, 'utf-8'));
@@ -446,6 +556,12 @@ function copyJsonFile(inputFile, outputFile) {
   }
 }
 
+/**
+ * Recursively merge JSON objects (inputValue overwrites outputValue where applicable)
+ * @param {any} inputValue
+ * @param {any} outputValue
+ * @returns {any}
+ */
 function mergeJson(inputValue, outputValue) {
   if (outputValue === null || outputValue === undefined) {
     return inputValue;
@@ -460,6 +576,11 @@ function mergeJson(inputValue, outputValue) {
   return outputValue;
 }
 
+/**
+ * Recursively create directory path
+ * @param {string} path_
+ * @returns {void}
+ */
 export function mkDir(path_) {
   const parent = path.join(path_, '..');
   if (!(fs.existsSync(parent) && !fs.statSync(parent).isFile())) {
