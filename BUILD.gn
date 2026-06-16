@@ -125,7 +125,11 @@ ohos_copy("weex_loader_ark_hap") {
     ":weex_scripter_ark_hap",
     ":weex_styler_ark_hap",
   ]
-  external_deps = [ "ace_js2bundle:ace_loader_ark_hap" ]
+  if (!is_arkui_x) {
+    external_deps = [ "ace_js2bundle:ace_loader_ark_hap" ]
+  } else {
+    deps += [ "//developtools/ace_js2bundle:ace_loader_ark_hap" ]
+  }
   sources = weex_loader_files_set
   outputs = [ ace_loader_ark_dir + "/lib/{{source_file_part}}" ]
 }
@@ -135,7 +139,11 @@ ohos_copy("weex_scripter_ark_hap") {
     ":build_weex_loader_library",
     ":weex_loader",
   ]
-  external_deps = [ "ace_js2bundle:ace_loader_ark_hap" ]
+  if (!is_arkui_x) {
+    external_deps = [ "ace_js2bundle:ace_loader_ark_hap" ]
+  } else {
+    deps += [ "//developtools/ace_js2bundle:ace_loader_ark_hap" ]
+  }
   sources = [ weex_loader_lib_dir + "/scripter" ]
   outputs = [ ace_loader_ark_dir + "/lib/scripter" ]
 }
@@ -145,7 +153,11 @@ ohos_copy("weex_styler_ark_hap") {
     ":build_weex_loader_library",
     ":weex_loader",
   ]
-  external_deps = [ "ace_js2bundle:ace_loader_ark_hap" ]
+  if (!is_arkui_x) {
+    external_deps = [ "ace_js2bundle:ace_loader_ark_hap" ]
+  } else {
+    deps += [ "//developtools/ace_js2bundle:ace_loader_ark_hap" ]
+  }
   sources = [ weex_loader_lib_dir + "/styler" ]
   outputs = [ ace_loader_ark_dir + "/lib/styler" ]
 }
