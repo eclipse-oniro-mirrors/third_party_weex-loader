@@ -2842,7 +2842,7 @@ var LITE_PROP_NAME_GROUPS = {
   text: {
     color: COLOR_VAR_VALIDATOR,
     fontSize: LENGTH_VALIDATOR,
-    fontFamily: genEnumValidator(['HYQiHei-65S']),
+    fontFamily: ANYTHING_VALIDATOR,
     letterSpacing: LENGTH_VALIDATOR,
     textAlign: genEnumValidator(['left', 'center', 'right']),
     textOverflow: genEnumValidator(['clip', 'ellipsis']),
@@ -2850,7 +2850,7 @@ var LITE_PROP_NAME_GROUPS = {
   slider: {
     selectedColor: COLOR_VAR_VALIDATOR,
     selectedFontSize: LENGTH_VALIDATOR,
-    selectedFontFamily: genEnumValidator(['HYQiHei-65S']),
+    selectedFontFamily: ANYTHING_VALIDATOR,
     blockColor: COLOR_VAR_VALIDATOR,
   },
   transform: {
