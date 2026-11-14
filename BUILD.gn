@@ -13,15 +13,33 @@
 
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
-import("//build/ohos/ace/loader_ark_layout.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
+
+# Legacy and XTS copies do not require the incremental layout extension.
+if (build_framework_enable_incremental_build && !build_xts) {
+  import("//build/ohos/ace/loader_ark_layout.gni")
+}
 
 weex_loader_lib_dir =
     get_label_info(":build_weex_loader_library", "target_out_dir") + "/lib"
 
-weex_loader_files_set = []
-foreach(_entry, ace_loader_weex_files) {
-  weex_loader_files_set += [ weex_loader_lib_dir + "/" + _entry ]
+if (build_framework_enable_incremental_build && !build_xts) {
+  weex_loader_files_set = []
+  foreach(_entry, ace_loader_weex_files) {
+    weex_loader_files_set += [ weex_loader_lib_dir + "/" + _entry ]
+  }
+} else {
+  weex_loader_files_set = [
+    weex_loader_lib_dir + "/element.js",
+    weex_loader_lib_dir + "/json.js",
+    weex_loader_lib_dir + "/legacy.js",
+    weex_loader_lib_dir + "/loader.js",
+    weex_loader_lib_dir + "/parser.js",
+    weex_loader_lib_dir + "/script.js",
+    weex_loader_lib_dir + "/style.js",
+    weex_loader_lib_dir + "/template.js",
+    weex_loader_lib_dir + "/util.js",
+  ]
 }
 
 action("build_weex_loader_library") {
