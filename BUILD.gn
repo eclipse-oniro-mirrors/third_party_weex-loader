@@ -15,15 +15,15 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 
-# Legacy and XTS copies do not require the incremental layout extension.
-if (build_framework_enable_incremental_build && !build_xts) {
+# Disabled-feature copies do not require the incremental layout extension.
+if (build_framework_enable_incremental_build) {
   import("//build/ohos/ace/loader_ark_layout.gni")
 }
 
 weex_loader_lib_dir =
     get_label_info(":build_weex_loader_library", "target_out_dir") + "/lib"
 
-if (build_framework_enable_incremental_build && !build_xts) {
+if (build_framework_enable_incremental_build) {
   weex_loader_files_set = []
   foreach(_entry, ace_loader_weex_files) {
     weex_loader_files_set += [ weex_loader_lib_dir + "/" + _entry ]
