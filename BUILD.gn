@@ -15,28 +15,21 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 
+# Disabled-feature copies do not require the incremental layout extension.
+if (build_framework_enable_incremental_build) {
+  import("//build/ohos/ace/loader_ark_layout.gni")
+}
+
 weex_loader_lib_dir =
     get_label_info(":build_weex_loader_library", "target_out_dir") + "/lib"
 
-weex_loader_files_set = [
-  weex_loader_lib_dir + "/element.js",
-  weex_loader_lib_dir + "/json.js",
-  weex_loader_lib_dir + "/legacy.js",
-  weex_loader_lib_dir + "/loader.js",
-  weex_loader_lib_dir + "/parser.js",
-  weex_loader_lib_dir + "/script.js",
-  weex_loader_lib_dir + "/style.js",
-  weex_loader_lib_dir + "/template.js",
-  weex_loader_lib_dir + "/util.js",
-]
-
-action("build_weex_loader_library") {
-  script = "build_weex_loader_library.py"
-  depfile = "$target_gen_dir/$target_name.d"
-  outputs = [
-    weex_loader_lib_dir,
-    weex_loader_lib_dir + "/scripter",
-    weex_loader_lib_dir + "/styler",
+if (build_framework_enable_incremental_build) {
+  weex_loader_files_set = []
+  foreach(_entry, ace_loader_weex_files) {
+    weex_loader_files_set += [ weex_loader_lib_dir + "/" + _entry ]
+  }
+} else {
+  weex_loader_files_set = [
     weex_loader_lib_dir + "/element.js",
     weex_loader_lib_dir + "/json.js",
     weex_loader_lib_dir + "/legacy.js",
@@ -47,6 +40,16 @@ action("build_weex_loader_library") {
     weex_loader_lib_dir + "/template.js",
     weex_loader_lib_dir + "/util.js",
   ]
+}
+
+action("build_weex_loader_library") {
+  script = "build_weex_loader_library.py"
+  depfile = "$target_gen_dir/$target_name.d"
+  outputs = [
+              weex_loader_lib_dir,
+              weex_loader_lib_dir + "/scripter",
+              weex_loader_lib_dir + "/styler",
+            ] + weex_loader_files_set
 
   _babel_js = "//third_party/weex-loader/node_modules/@babel/cli/bin/babel.js"
   _babel_config_js = "//third_party/weex-loader/babel.config.js"
