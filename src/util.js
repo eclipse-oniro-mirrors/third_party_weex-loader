@@ -503,9 +503,6 @@ function isPathUnderBase(fullPath, basePath) {
  * @param {string} resourcePath
  */
 function checkModuleIsVaild(requireStatementExec, resourcePath) {
-
-  
-
   if (process.env.DEVICE_LEVEL  !== 'lite' || !requireStatementExec || requireStatementExec.length <= 3) {
     return;
   }
