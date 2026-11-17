@@ -504,17 +504,7 @@ function isPathUnderBase(fullPath, basePath) {
  */
 function checkModuleIsVaild(requireStatementExec, resourcePath) {
 
-  if (
-    requireStatementExec && requireStatementExec[2] &&
-    (
-      requireStatementExec[2].startsWith('@system.') || 
-      requireStatementExec[2].startsWith('@ohos.') ||
-      requireStatementExec[2].startsWith('@hms.') ||
-      requireStatementExec[2].startsWith('@babel/runtime/')
-    )
-  ) {
-    return;
-  }
+  
 
   if (process.env.DEVICE_LEVEL  !== 'lite' || !requireStatementExec || requireStatementExec.length <= 3) {
     return;
@@ -543,6 +533,18 @@ function checkModuleIsVaild(requireStatementExec, resourcePath) {
 
   const moduleName = requireStatementExec[2];
   if (moduleName.includes('../')) {
+    return;
+  }
+
+  if (
+    requireStatementExec && requireStatementExec[2] &&
+    (
+      requireStatementExec[2].startsWith('@system.') || 
+      requireStatementExec[2].startsWith('@ohos.') ||
+      requireStatementExec[2].startsWith('@hms.') ||
+      requireStatementExec[2].startsWith('@babel/runtime/')
+    )
+  ) {
     return;
   }
 
