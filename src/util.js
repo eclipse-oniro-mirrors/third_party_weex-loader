@@ -532,6 +532,19 @@ function checkModuleIsVaild(requireStatementExec, resourcePath) {
   if (moduleName.includes('../')) {
     return;
   }
+
+  if (
+    requireStatementExec && requireStatementExec[2] &&
+    (
+      requireStatementExec[2].startsWith('@system.') || 
+      requireStatementExec[2].startsWith('@ohos.') ||
+      requireStatementExec[2].startsWith('@hms.') ||
+      requireStatementExec[2].startsWith('@babel/runtime/')
+    )
+  ) {
+    return;
+  }
+
   if (!dependencies.includes(moduleName)) {
     throw new Error(`Cannot find module ${moduleName} or its corresponding type declarations.`);
   }
